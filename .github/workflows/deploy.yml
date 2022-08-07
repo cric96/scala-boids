@@ -35,7 +35,7 @@ jobs:
         run:  sbt -v "fastOptJS"
       - name: Adjust folders for deployment
         shell: bash
-        run: .github/scripts/adjust-deployment.sh
+        run: .github/scripts/adjust-deploy.sh
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
