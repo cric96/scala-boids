@@ -32,7 +32,7 @@ jobs:
       - name: Coursier cache
         uses: coursier/cache-action@v5
       - name: Build project
-        run:  sbt -v "project js; fastOptJS"
+        run:  sbt -v "fastOptJS"
       - name: Adjust folders for deployment
         shell: bash
         run: .github/scripts/adjust-deployment.sh
