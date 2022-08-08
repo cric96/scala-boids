@@ -19,11 +19,9 @@ import scala.math.atan
 import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
 import java.net.URL
-import typings.jsQuadtree.quadTreeMod.QuadTree
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
   // Import part
   typings.p5.p5Require
-  typings.jsQuadtree.jsQuadtreeRequire
   // InitialValues
   var boidsCount = 500
   var boidHeight = 10
