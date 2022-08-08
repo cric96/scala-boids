@@ -16,7 +16,10 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
   .jsConfigure(p => p.enablePlugins(ScalablyTypedConverterPlugin))
   .jsSettings(
     Compile / npmDependencies ++=
-      Seq("@types/p5" -> "1.4.2", "p5" -> "1.4.2"),
+      Seq(
+        "@types/p5" -> "1.4.2",
+        "p5" -> "1.4.2"
+      ),
     scalaJSUseMainModuleInitializer := true,
     webpackEmitSourceMaps := false
   )

@@ -18,15 +18,19 @@ import scalajs.js
 import scala.math.atan
 import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
-
 import java.net.URL
+import typings.jsQuadtree.quadTreeMod.QuadTree
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
+  // Import part
+  typings.p5.p5Require
+  typings.jsQuadtree.jsQuadtreeRequire
   // InitialValues
   var boidsCount = 500
   var boidHeight = 10
   var environment: Environment = _
   var simulation: Cancelable = _
   var sliders: Map[String, Slider] = Map.empty
+  var showBoids = false
   // Context
   given Random = Random(0)
 
@@ -39,6 +43,9 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
       .loop()
       .runAsync { _ => }
+    val hideBoids = createButton("show boids");
+    hideBoids.position(10, 10);
+    hideBoids.mousePressed(data => showBoids = !showBoids)
     canvas.style("display", "block")
     noLoop()
 
@@ -52,20 +59,19 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
         .runAsync { _ => }
     background(255)
     colorMode(HSB)
-    val densityMap = DensityEvaluation.fromEnvironment(environment, sliders("precision").value, boundingBox)
-    drawDensityMap(boundingBox, sliders("precision").value, densityMap)
+    drawDensityMap(boundingBox, sliders("bucketSize").value, sliders("bucketRange").value, environment)
     sliders.values.foreach(_.render())
-    environment.all.foreach(boid =>
-      val delta = boidHeight / 2
-      val (x, y) = (boid.position.x, boid.position.y)
-      val angle = math.atan2(boid.velocity.y, boid.velocity.x)
-      colorFromDensity(densityMap(boid.position))
-      push()
-      translate(x, y)
-      rotate(angle + HALF_PI)
-      triangle(0, 0 - boidHeight, 0 + delta, 0 + delta, 0 - delta, 0 + delta)
-      pop()
-    )
+    if (showBoids)
+      environment.all.foreach(boid =>
+        val delta = boidHeight / 2
+        val (x, y) = (boid.position.x, boid.position.y)
+        val angle = math.atan2(boid.velocity.y, boid.velocity.x)
+        push()
+        translate(x, y)
+        rotate(angle + HALF_PI)
+        triangle(0, 0 - boidHeight, 0 + delta, 0 + delta, 0 - delta, 0 + delta)
+        pop()
+      )
 
   override def getCurrentConfig(): ConfigurationStore.Config =
     val flocks = Flocking.Weight(sliders("separation").value, sliders("align").value, sliders("cohesion").value)
@@ -93,16 +99,22 @@ def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, heigh
 
 def createSliders(): Map[String, Slider] =
   Map(
-    "separation" -> Slider("separation", 0, 3, 2, (10, 10)),
-    "align" -> Slider("align", 0, 3, 1, (10, 30)),
-    "cohesion" -> Slider("cohesion", 0, 3, 1, (10, 50)),
-    "visionRange" -> Slider("visionRange", 20, 200, 50, (10, 70)),
-    "separationRange" -> Slider("separationRange", 5, 100, 10, (10, 90)),
-    "precision" -> Slider("precision", 20, 400, 40, (10, 110)),
-    "boidsCount" -> Slider("boids", 100, 1000, 400, (10, 130), false)
+    "separation" -> Slider("separation", 0, 3, 2, (10, 30)),
+    "align" -> Slider("align", 0, 3, 1, (10, 50)),
+    "cohesion" -> Slider("cohesion", 0, 3, 1, (10, 70)),
+    "visionRange" -> Slider("visionRange", 20, 200, 50, (10, 90)),
+    "separationRange" -> Slider("separationRange", 5, 100, 10, (10, 110)),
+    "bucketSize" -> Slider("bucketDefinition", 10, 40, 20, (10, 130), false),
+    "bucketRange" -> Slider("bucketRange", 20, 200, 100, (10, 150)),
+    "boidsCount" -> Slider("boids", 100, 1000, 400, (10, 170), false)
   )
 
-def drawDensityMap(boundingBox: Rectangle2D, precision: Double, densityEvaluation: DensityEvaluation): Unit =
+def drawDensityMap(
+    boundingBox: Rectangle2D,
+    precision: Double,
+    visionRange: Double,
+    environment: Environment
+): Unit =
   val startX = boundingBox.bottomLeft.x
   val startY = boundingBox.bottomLeft.y
   def iterateUntil(start: Double, end: Double): LazyList[Double] =
@@ -113,12 +125,19 @@ def drawDensityMap(boundingBox: Rectangle2D, precision: Double, densityEvaluatio
   } yield (Vector2D(x, y))
   push()
   noStroke()
-  allCoords.foreach { bottom =>
-    val density = densityEvaluation(Vector2D(bottom.x + precision / 2, bottom.y + precision / 2))
-    colorFromDensity(density)
+  val densityMap = allCoords.map { coord =>
+    val bottomLeft = coord - (Vector2D(visionRange / 2, visionRange / 2))
+    val topRight = coord + (Vector2D(visionRange / 2, visionRange / 2))
+    val density = environment.getAllIn(bottomLeft, topRight).size
+    coord -> density
+  }
+  val maxDensityValue = densityMap.maxBy(_._2)._2
+  densityMap.foreach { (bottom, density) =>
+    colorFromDensity(density / maxDensityValue.toDouble)
     rect(bottom.x, bottom.y, precision, precision)
   }
+
   pop()
 
 def colorFromDensity(density: Double): Unit =
-  fill(0, 127, density, 0.5)
+  fill((1 - density) * 360, 127, density * 255, 0.5)

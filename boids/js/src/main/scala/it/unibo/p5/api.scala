@@ -1,5 +1,6 @@
 package it.unibo.p5
 
+import typings.p5.p5Require
 import typings.p5.mod.p5
 
 import scala.scalajs.js
