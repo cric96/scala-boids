@@ -21,10 +21,13 @@ case class Simulation(
     _ <- this.copy(environment = newWorld).loop()
   } yield ()
 
-  private def step(): Task[Environment] = Task {
-    val flockConfig = store.getCurrentConfig()
-    val flockingBehaviour = dynamicsFactory(flockConfig)
-    val newWorld = flockingBehaviour(environment)
-    render.render(newWorld)
-    newWorld
-  }
+  private def step(): Task[Environment] = Task
+    .defer {
+      val flockConfig = store.getCurrentConfig()
+      val flockingBehaviour = dynamicsFactory(flockConfig)
+      flockingBehaviour(environment)
+    }
+    .map(newWorld =>
+      render.render(newWorld)
+      newWorld
+    )

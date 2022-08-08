@@ -21,7 +21,7 @@ object FlockingRendering extends App:
   SwingUtilities.invokeLater(() =>
     val simulation = Simulation(
       render,
-      setupBoids(render.bounds, 5000),
+      setupBoids(render.bounds, 1000),
       render,
       flockingFactory,
       33 milliseconds

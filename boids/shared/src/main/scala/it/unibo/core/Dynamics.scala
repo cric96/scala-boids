@@ -1,3 +1,5 @@
 package it.unibo.core
 
-trait Dynamics extends (Environment => Environment)
+import monix.eval.Task
+
+trait Dynamics extends (Environment => Task[Environment])
