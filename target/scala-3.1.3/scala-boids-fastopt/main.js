@@ -1086,7 +1086,7 @@ var $d_Lcom_github_plokhotnyuk_rtree2d_core_RTree = new $TypeData().initClass({
   O: 1
 });
 /** @constructor */
-function $c_Lit_unibo_Slider(name, minBound, maxBound, initialValue, position) {
+function $c_Lit_unibo_Slider(name, minBound, maxBound, initialValue, position, ticks) {
   this.Lit_unibo_Slider__f_name = null;
   this.Lit_unibo_Slider__f_position = null;
   this.Lit_unibo_Slider__f_slider = null;
@@ -1094,7 +1094,7 @@ function $c_Lit_unibo_Slider(name, minBound, maxBound, initialValue, position) {
   this.Lit_unibo_Slider__f_textSizeFont = 0;
   this.Lit_unibo_Slider__f_name = name;
   this.Lit_unibo_Slider__f_position = position;
-  this.Lit_unibo_Slider__f_slider = createSlider(minBound, maxBound, initialValue, ((maxBound - minBound) / 100.0));
+  this.Lit_unibo_Slider__f_slider = (ticks ? createSlider(minBound, maxBound, initialValue, ((maxBound - minBound) / 100.0)) : createSlider(minBound, maxBound, initialValue));
   this.Lit_unibo_Slider__f_size = 150;
   this.Lit_unibo_Slider__f_textSizeFont = 15;
   this.Lit_unibo_Slider__f_slider.position($uD(position.T2__f__1), $uD(position.T2__f__2))
@@ -1279,12 +1279,12 @@ function $s_Lit_unibo_render_Main__main__AT__V(args) {
   $f_s_App__main__AT__V(this$1, args)
 }
 function $p_Lit_unibo_render_Main$package$__iterateUntil$1__D__D__D__sci_LazyList($thiz, precision$1, start, end) {
-  return $m_s_package$().s_package$__f_LazyList.iterate__F0__F1__sci_LazyList(new $c_sjsr_AnonFunction0((() => start)), new $c_sjsr_AnonFunction1(((_$2) => {
-    var _$2$1 = $uD(_$2);
-    return (_$2$1 + precision$1)
-  }))).takeWhile__F1__sci_LazyList(new $c_sjsr_AnonFunction1(((_$3) => {
-    var _$3$1 = $uD(_$3);
-    return (_$3$1 < end)
+  return $m_s_package$().s_package$__f_LazyList.iterate__F0__F1__sci_LazyList(new $c_sjsr_AnonFunction0((() => start)), new $c_sjsr_AnonFunction1(((_$6) => {
+    var _$6$1 = $uD(_$6);
+    return (_$6$1 + precision$1)
+  }))).takeWhile__F1__sci_LazyList(new $c_sjsr_AnonFunction1(((_$7) => {
+    var _$7$1 = $uD(_$7);
+    return (_$7$1 < end)
   })))
 }
 /** @constructor */
@@ -1332,21 +1332,23 @@ $c_Lit_unibo_render_Main$package$.prototype.boundingBox__Lit_unibo_core_geometry
   return new $c_Lit_unibo_core_geometry_Rectangle2D(bottomLeft, topRight)
 });
 $c_Lit_unibo_render_Main$package$.prototype.createSliders__sci_Map = (function() {
-  var this$19 = $m_s_Predef$().s_Predef$__f_Map;
-  var $$x6 = $m_sr_ScalaRunTime$();
-  var y = new $c_Lit_unibo_Slider("separation", 0.0, 3.0, 2.0, new $c_T2(10.0, 10.0));
-  var $$x5 = new $c_T2("separation", y);
-  var y$1 = new $c_Lit_unibo_Slider("align", 0.0, 3.0, 1.0, new $c_T2(10.0, 30.0));
-  var $$x4 = new $c_T2("align", y$1);
-  var y$2 = new $c_Lit_unibo_Slider("cohesion", 0.0, 3.0, 1.0, new $c_T2(10.0, 50.0));
-  var $$x3 = new $c_T2("cohesion", y$2);
-  var y$3 = new $c_Lit_unibo_Slider("visionRange", 20.0, 200.0, 50.0, new $c_T2(10.0, 70.0));
-  var $$x2 = new $c_T2("visionRange", y$3);
-  var y$4 = new $c_Lit_unibo_Slider("separationRange", 5.0, 100.0, 10.0, new $c_T2(10.0, 90.0));
-  var $$x1 = new $c_T2("separationRange", y$4);
-  var y$5 = new $c_Lit_unibo_Slider("precision", 20.0, 400.0, 40.0, new $c_T2(10.0, 110.0));
-  var elems = $$x6.wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([$$x5, $$x4, $$x3, $$x2, $$x1, new $c_T2("precision", y$5)]));
-  return this$19.from__sc_IterableOnce__sci_Map(elems)
+  var this$22 = $m_s_Predef$().s_Predef$__f_Map;
+  var $$x7 = $m_sr_ScalaRunTime$();
+  var y = new $c_Lit_unibo_Slider("separation", 0.0, 3.0, 2.0, new $c_T2(10.0, 10.0), true);
+  var $$x6 = new $c_T2("separation", y);
+  var y$1 = new $c_Lit_unibo_Slider("align", 0.0, 3.0, 1.0, new $c_T2(10.0, 30.0), true);
+  var $$x5 = new $c_T2("align", y$1);
+  var y$2 = new $c_Lit_unibo_Slider("cohesion", 0.0, 3.0, 1.0, new $c_T2(10.0, 50.0), true);
+  var $$x4 = new $c_T2("cohesion", y$2);
+  var y$3 = new $c_Lit_unibo_Slider("visionRange", 20.0, 200.0, 50.0, new $c_T2(10.0, 70.0), true);
+  var $$x3 = new $c_T2("visionRange", y$3);
+  var y$4 = new $c_Lit_unibo_Slider("separationRange", 5.0, 100.0, 10.0, new $c_T2(10.0, 90.0), true);
+  var $$x2 = new $c_T2("separationRange", y$4);
+  var y$5 = new $c_Lit_unibo_Slider("precision", 20.0, 400.0, 40.0, new $c_T2(10.0, 110.0), true);
+  var $$x1 = new $c_T2("precision", y$5);
+  var y$6 = new $c_Lit_unibo_Slider("boids", 100.0, 1000.0, 400.0, new $c_T2(10.0, 130.0), false);
+  var elems = $$x7.wrapRefArray__AO__sci_ArraySeq(new ($d_T2.getArrayOf().constr)([$$x6, $$x5, $$x4, $$x3, $$x2, $$x1, new $c_T2("boidsCount", y$6)]));
+  return this$22.from__sc_IterableOnce__sci_Map(elems)
 });
 $c_Lit_unibo_render_Main$package$.prototype.drawDensityMap__Lit_unibo_core_geometry_Rectangle2D__D__Lit_unibo_core_DensityEvaluation__V = (function(boundingBox, precision, densityEvaluation) {
   $m_Lit_unibo_core_geometry_Vector2D$();
@@ -1451,7 +1453,7 @@ $c_Lit_unibo_render_Main$package$.prototype.drawDensityMap__Lit_unibo_core_geome
   pop()
 });
 $c_Lit_unibo_render_Main$package$.prototype.colorFromDensity__D__V = (function(density) {
-  fill(10.0, 127.0, density, 0.5)
+  fill(0.0, 127.0, density, 0.5)
 });
 var $d_Lit_unibo_render_Main$package$ = new $TypeData().initClass({
   Lit_unibo_render_Main$package$: 0
@@ -5612,6 +5614,18 @@ function $h_Lmonix_eval_internal_UnsafeCancelUtils$() {
   /*<skip>*/
 }
 $h_Lmonix_eval_internal_UnsafeCancelUtils$.prototype = $c_Lmonix_eval_internal_UnsafeCancelUtils$.prototype;
+$c_Lmonix_eval_internal_UnsafeCancelUtils$.prototype.taskToCancelable__Lmonix_eval_Task__Lmonix_execution_Scheduler__Lmonix_execution_Cancelable = (function(task, s) {
+  var x$2 = $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_unit;
+  if (((task === null) ? (x$2 === null) : task.equals__O__Z(x$2))) {
+    return $m_Lmonix_execution_Cancelable$().Lmonix_execution_Cancelable$__f_empty
+  } else {
+    $m_Lmonix_execution_Cancelable$();
+    var callback = new $c_sjsr_AnonFunction0((() => {
+      task.runAsyncAndForgetOpt__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__V(s, $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_defaultOptions)
+    }));
+    return new $c_Lmonix_execution_Cancelable$CancelableTask(callback)
+  }
+});
 $c_Lmonix_eval_internal_UnsafeCancelUtils$.prototype.cancelAllUnsafe__sc_Iterable__Lmonix_eval_Task = (function(cursor) {
   return (cursor.isEmpty__Z() ? $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_unit : $m_Lmonix_eval_Task$().suspend__F0__Lmonix_eval_Task(new $c_sjsr_AnonFunction0((() => {
     var frame = new $c_Lmonix_eval_internal_UnsafeCancelUtils$CancelAllFrame(cursor.iterator__sc_Iterator());
@@ -15419,6 +15433,12 @@ var $d_ju_concurrent_ConcurrentHashMap$InnerHashMap$NodeIterator = new $TypeData
   ju_Iterator: 1
 });
 $c_ju_concurrent_ConcurrentHashMap$InnerHashMap$NodeIterator.prototype.$classData = $d_ju_concurrent_ConcurrentHashMap$InnerHashMap$NodeIterator;
+function $p_Lmonix_eval_Task__f$1$1__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable($thiz, cb$1, s$1, opts2$1) {
+  return $m_Lmonix_eval_internal_UnsafeCancelUtils$().taskToCancelable__Lmonix_eval_Task__Lmonix_execution_Scheduler__Lmonix_execution_Cancelable($thiz.runAsyncOptF__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task(cb$1, s$1, opts2$1), s$1)
+}
+function $p_Lmonix_eval_Task__f$2$1__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task($thiz, cb$2, s$2, opts2$2) {
+  return $m_Lmonix_eval_internal_TaskRunLoop$().startLight__Lmonix_eval_Task__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Callback__Z__Lmonix_eval_Task($thiz, s$2, opts2$2, $m_Lmonix_execution_Callback$().fromAttempt__F1__Lmonix_execution_Callback(cb$2), ($m_Lmonix_eval_internal_TaskRunLoop$(), true))
+}
 /** @constructor */
 function $c_Lmonix_eval_Task() {
   /*<skip>*/
@@ -15430,6 +15450,46 @@ function $h_Lmonix_eval_Task() {
   /*<skip>*/
 }
 $h_Lmonix_eval_Task.prototype = $c_Lmonix_eval_Task.prototype;
+$c_Lmonix_eval_Task.prototype.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable = (function(cb, s, opts) {
+  var opts2 = opts.withSchedulerFeatures__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options(s);
+  $m_Lmonix_execution_misc_Local$();
+  var this$2 = $m_Lmonix_execution_misc_CanBindLocals$();
+  this$2.SynchronousInstance__Lmonix_execution_misc_CanIsolateInstancesLevel0$SynchronousInstance$();
+  if ((!opts2.Lmonix_eval_Task$Options__f_localContextPropagation)) {
+    return $p_Lmonix_eval_Task__f$1$1__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable(this, cb, s, opts2)
+  } else {
+    $m_Lmonix_execution_misc_Local$();
+    var this$4 = $m_Lmonix_execution_misc_Local$().getContext__Lmonix_execution_misc_Local$Context();
+    var ctx = $p_Lmonix_execution_misc_Local$Context__isolateLoop__Lmonix_execution_misc_Local$Unbound(this$4);
+    var prev = $m_Lmonix_execution_misc_Local$().getContext__Lmonix_execution_misc_Local$Context();
+    $m_Lmonix_execution_misc_Local$().setContext__Lmonix_execution_misc_Local$Context__V(ctx);
+    try {
+      return $p_Lmonix_eval_Task__f$1$1__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable(this, cb, s, opts2)
+    } finally {
+      $m_Lmonix_execution_misc_Local$().setContext__Lmonix_execution_misc_Local$Context__V(prev)
+    }
+  }
+});
+$c_Lmonix_eval_Task.prototype.runAsyncOptF__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task = (function(cb, s, opts) {
+  var opts2 = opts.withSchedulerFeatures__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options(s);
+  $m_Lmonix_execution_misc_Local$();
+  var this$2 = $m_Lmonix_execution_misc_CanBindLocals$();
+  this$2.SynchronousInstance__Lmonix_execution_misc_CanIsolateInstancesLevel0$SynchronousInstance$();
+  if ((!opts2.Lmonix_eval_Task$Options__f_localContextPropagation)) {
+    return $p_Lmonix_eval_Task__f$2$1__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task(this, cb, s, opts2)
+  } else {
+    $m_Lmonix_execution_misc_Local$();
+    var this$4 = $m_Lmonix_execution_misc_Local$().getContext__Lmonix_execution_misc_Local$Context();
+    var ctx = $p_Lmonix_execution_misc_Local$Context__isolateLoop__Lmonix_execution_misc_Local$Unbound(this$4);
+    var prev = $m_Lmonix_execution_misc_Local$().getContext__Lmonix_execution_misc_Local$Context();
+    $m_Lmonix_execution_misc_Local$().setContext__Lmonix_execution_misc_Local$Context__V(ctx);
+    try {
+      return $p_Lmonix_eval_Task__f$2$1__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task(this, cb, s, opts2)
+    } finally {
+      $m_Lmonix_execution_misc_Local$().setContext__Lmonix_execution_misc_Local$Context__V(prev)
+    }
+  }
+});
 $c_Lmonix_eval_Task.prototype.runAsyncAndForgetOpt__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__V = (function(s, opts) {
   this.runAsyncUncancelableOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__V(new $c_Lmonix_execution_Callback$Empty(s), s, opts)
 });
@@ -29033,14 +29093,14 @@ function $c_Lit_unibo_render_Main$() {
   this.Lit_unibo_render_Main$__f_boidsCount = 0;
   this.Lit_unibo_render_Main$__f_boidHeight = 0;
   this.Lit_unibo_render_Main$__f_environment = null;
+  this.Lit_unibo_render_Main$__f_simulation = null;
   this.Lit_unibo_render_Main$__f_sliders = null;
   this.Lit_unibo_render_Main$__f_given_Random$lzy1 = null;
   this.Lit_unibo_render_Main$__f_given_Randombitmap$1 = false;
   $n_Lit_unibo_render_Main$ = this;
   $f_s_App__$init$__V(this);
-  this.Lit_unibo_render_Main$__f_boidsCount = 1000;
+  this.Lit_unibo_render_Main$__f_boidsCount = 500;
   this.Lit_unibo_render_Main$__f_boidHeight = 10;
-  this.Lit_unibo_render_Main$__f_environment = null;
   this.Lit_unibo_render_Main$__f_sliders = $m_sci_Map$EmptyMap$();
   $m_Lit_unibo_p5_P5$().apply__Lit_unibo_p5_P5Logic__V(this)
 }
@@ -29071,27 +29131,49 @@ $c_Lit_unibo_render_Main$.prototype.setup__V = (function() {
   $m_s_concurrent_duration_Duration$();
   var hi = (this$ >> 31);
   var deltaTime = new $c_s_concurrent_duration_FiniteDuration(new $c_RTLong(this$, hi), unit);
-  var this$7 = new $c_Lit_unibo_core_simulation_Simulation(this, environment, this, dynamicsFactory, deltaTime).loop__Lmonix_eval_Task();
+  var this$8 = new $c_Lit_unibo_core_simulation_Simulation(this, environment, this, dynamicsFactory, deltaTime).loop__Lmonix_eval_Task();
+  var cb = new $c_sjsr_AnonFunction1(((_$3) => {
+    $as_s_util_Either(_$3)
+  }));
   var s = $m_Lmonix_execution_Scheduler$().Implicits__Lmonix_execution_schedulers_SchedulerCompanionImpl$Implicits$().global__Lmonix_execution_Scheduler();
-  this$7.runAsyncAndForgetOpt__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__V(s, $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_defaultOptions);
+  this.Lit_unibo_render_Main$__f_simulation = this$8.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable(cb, s, $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_defaultOptions);
   canvas.style("display", "block");
   noLoop()
 });
 $c_Lit_unibo_render_Main$.prototype.draw__V = (function() {
+  if (($doubleToInt($as_Lit_unibo_Slider(this.Lit_unibo_render_Main$__f_sliders.apply__O__O("boidsCount")).value__D()) !== this.Lit_unibo_render_Main$__f_boidsCount)) {
+    this.Lit_unibo_render_Main$__f_boidsCount = $doubleToInt($as_Lit_unibo_Slider(this.Lit_unibo_render_Main$__f_sliders.apply__O__O("boidsCount")).value__D());
+    this.Lit_unibo_render_Main$__f_simulation.cancel__V();
+    this.Lit_unibo_render_Main$__f_environment = $m_Lit_unibo_render_Main$package$().setupBoids__Lit_unibo_core_geometry_Rectangle2D__I__s_util_Random__Lit_unibo_core_Environment($m_Lit_unibo_render_Main$package$().boundingBox__Lit_unibo_core_geometry_Rectangle2D(), this.Lit_unibo_render_Main$__f_boidsCount, this.given_Random__s_util_Random());
+    var environment = this.Lit_unibo_render_Main$__f_environment;
+    var dynamicsFactory = $m_Lit_unibo_render_Main$package$().flockingFactory__F1();
+    var this$2 = new $c_s_concurrent_duration_package$DurationInt(33);
+    var unit = $m_ju_concurrent_TimeUnit$().ju_concurrent_TimeUnit$__f_MILLISECONDS;
+    var this$ = this$2.s_concurrent_duration_package$DurationInt__f_scala$concurrent$duration$DurationInt$$n;
+    $m_s_concurrent_duration_Duration$();
+    var hi = (this$ >> 31);
+    var deltaTime = new $c_s_concurrent_duration_FiniteDuration(new $c_RTLong(this$, hi), unit);
+    var this$8 = new $c_Lit_unibo_core_simulation_Simulation(this, environment, this, dynamicsFactory, deltaTime).loop__Lmonix_eval_Task();
+    var cb = new $c_sjsr_AnonFunction1(((_$4) => {
+      $as_s_util_Either(_$4)
+    }));
+    var s = $m_Lmonix_execution_Scheduler$().Implicits__Lmonix_execution_schedulers_SchedulerCompanionImpl$Implicits$().global__Lmonix_execution_Scheduler();
+    this.Lit_unibo_render_Main$__f_simulation = this$8.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable(cb, s, $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_defaultOptions)
+  };
   background(255.0);
   colorMode(HSB);
-  var environment = this.Lit_unibo_render_Main$__f_environment;
+  var environment$1 = this.Lit_unibo_render_Main$__f_environment;
   var bucketSize = $as_Lit_unibo_Slider(this.Lit_unibo_render_Main$__f_sliders.apply__O__O("precision")).value__D();
   var boundingBox = $m_Lit_unibo_render_Main$package$().boundingBox__Lit_unibo_core_geometry_Rectangle2D();
-  var densityMap = new $c_Lit_unibo_core_DensityEvaluation$$anon$1(environment, bucketSize, boundingBox);
+  var densityMap = new $c_Lit_unibo_core_DensityEvaluation$$anon$1(environment$1, bucketSize, boundingBox);
   $m_Lit_unibo_render_Main$package$().drawDensityMap__Lit_unibo_core_geometry_Rectangle2D__D__Lit_unibo_core_DensityEvaluation__V($m_Lit_unibo_render_Main$package$().boundingBox__Lit_unibo_core_geometry_Rectangle2D(), $as_Lit_unibo_Slider(this.Lit_unibo_render_Main$__f_sliders.apply__O__O("precision")).value__D(), densityMap);
-  var this$2 = this.Lit_unibo_render_Main$__f_sliders;
-  var this$3 = new $c_sc_MapOps$$anon$1(this$2);
-  var it = this$3.iterator__sc_Iterator();
+  var this$10 = this.Lit_unibo_render_Main$__f_sliders;
+  var this$11 = new $c_sc_MapOps$$anon$1(this$10);
+  var it = this$11.iterator__sc_Iterator();
   while (it.hasNext__Z()) {
     var arg1 = it.next__O();
-    var _$1 = $as_Lit_unibo_Slider(arg1);
-    _$1.render__V()
+    var _$5 = $as_Lit_unibo_Slider(arg1);
+    _$5.render__V()
   };
   this.Lit_unibo_render_Main$__f_environment.Lit_unibo_core_RTreeEnvironment__f_adjustedBoids.foreach__F1__V(new $c_sjsr_AnonFunction1(((boid) => {
     var boid$1 = $as_Lit_unibo_core_Boid(boid);
@@ -29917,6 +29999,26 @@ $c_Lmonix_eval_Task$Error.prototype.productElement__I__O = (function(n) {
   };
   throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), ("" + n))
 });
+$c_Lmonix_eval_Task$Error.prototype.runAsyncOptF__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task = (function(cb, s, opts) {
+  var x = s.executionModel__Lmonix_execution_ExecutionModel();
+  var x$2 = $m_Lmonix_execution_ExecutionModel$AlwaysAsyncExecution$();
+  if ((!((x !== null) && x.equals__O__Z(x$2)))) {
+    $m_Lmonix_execution_Callback$().callError__F1__O__V(cb, this.Lmonix_eval_Task$Error__f_e);
+    return $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_unit
+  } else {
+    return $c_Lmonix_eval_Task.prototype.runAsyncOptF__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task.call(this, cb, s, opts)
+  }
+});
+$c_Lmonix_eval_Task$Error.prototype.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable = (function(cb, s, opts) {
+  var x = s.executionModel__Lmonix_execution_ExecutionModel();
+  var x$2 = $m_Lmonix_execution_ExecutionModel$AlwaysAsyncExecution$();
+  if ((!((x !== null) && x.equals__O__Z(x$2)))) {
+    $m_Lmonix_execution_Callback$().callError__F1__O__V(cb, this.Lmonix_eval_Task$Error__f_e);
+    return $m_Lmonix_execution_Cancelable$().Lmonix_execution_Cancelable$__f_empty
+  } else {
+    return $c_Lmonix_eval_Task.prototype.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable.call(this, cb, s, opts)
+  }
+});
 $c_Lmonix_eval_Task$Error.prototype.runAsyncAndForgetOpt__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__V = (function(s, opts) {
   s.reportFailure__jl_Throwable__V(this.Lmonix_eval_Task$Error__f_e)
 });
@@ -30150,6 +30252,26 @@ $c_Lmonix_eval_Task$Now.prototype.productElement__I__O = (function(n) {
     return this.Lmonix_eval_Task$Now__f_value
   };
   throw $ct_jl_IndexOutOfBoundsException__T__(new $c_jl_IndexOutOfBoundsException(), ("" + n))
+});
+$c_Lmonix_eval_Task$Now.prototype.runAsyncOptF__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task = (function(cb, s, opts) {
+  var x = s.executionModel__Lmonix_execution_ExecutionModel();
+  var x$2 = $m_Lmonix_execution_ExecutionModel$AlwaysAsyncExecution$();
+  if ((!((x !== null) && x.equals__O__Z(x$2)))) {
+    $m_Lmonix_execution_Callback$().callSuccess__F1__O__V(cb, this.Lmonix_eval_Task$Now__f_value);
+    return $m_Lmonix_eval_Task$().Lmonix_eval_Task$__f_unit
+  } else {
+    return $c_Lmonix_eval_Task.prototype.runAsyncOptF__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_eval_Task.call(this, cb, s, opts)
+  }
+});
+$c_Lmonix_eval_Task$Now.prototype.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable = (function(cb, s, opts) {
+  var x = s.executionModel__Lmonix_execution_ExecutionModel();
+  var x$2 = $m_Lmonix_execution_ExecutionModel$AlwaysAsyncExecution$();
+  if ((!((x !== null) && x.equals__O__Z(x$2)))) {
+    $m_Lmonix_execution_Callback$().callSuccess__F1__O__V(cb, this.Lmonix_eval_Task$Now__f_value);
+    return $m_Lmonix_execution_Cancelable$().Lmonix_execution_Cancelable$__f_empty
+  } else {
+    return $c_Lmonix_eval_Task.prototype.runAsyncOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__Lmonix_execution_Cancelable.call(this, cb, s, opts)
+  }
 });
 $c_Lmonix_eval_Task$Now.prototype.runAsyncUncancelableOpt__F1__Lmonix_execution_Scheduler__Lmonix_eval_Task$Options__V = (function(cb, s, opts) {
   var x = s.executionModel__Lmonix_execution_ExecutionModel();
