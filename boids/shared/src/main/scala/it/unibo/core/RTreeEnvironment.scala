@@ -53,7 +53,6 @@ class RTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extends Envir
     val otherSearch = upCorner ++ downCorner ++ rightCorner ++ topCorner ++ bottomCorner ++ leftCorner
     (otherSearch ++ plainSearch)
       .map(_.value)
-      .distinct
       .filter(_ != center)
   def getAllIn(bottomLeft: Vector2D, topRight: Vector2D): Seq[Boid] =
     spatialIndex

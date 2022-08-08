@@ -11,13 +11,15 @@ class Flocking(weights: Weight, visionRange: Double, separationRange: Double) ex
   override def apply(environment: Environment): Environment =
     val updatedBoids = environment.replaceBoidsWith(
       environment.all
-        .map(center => center -> environment.nearTo(center, visionRange))
-        .map((center, neighborhood) => applyFlockingFactor(center, neighborhood))
+        .map(center => (center, environment.nearTo(center, visionRange), environment.nearTo(center, separationRange)))
+        .map((center, neighborhood, separationNeighborhood) =>
+          applyFlockingFactor(center, separationNeighborhood, separationNeighborhood)
+        )
     )
     actuator(updatedBoids)
 
-  private def applyFlockingFactor(center: Boid, neighborhood: Seq[Boid]): Boid =
-    val separationForce = separation(center, neighborhood) * maxForce
+  private def applyFlockingFactor(center: Boid, neighborhood: Seq[Boid], separationNeighborhood: Seq[Boid]): Boid =
+    val separationForce = separation(center, separationNeighborhood) * maxForce
     val alignForce = align(center, neighborhood) * maxForce
     val cohesionForce = cohesion(center, neighborhood) * maxForce
     val forces = separationForce * weights.separation + alignForce * weights.align + cohesionForce * weights.cohesion
@@ -28,7 +30,6 @@ class Flocking(weights: Weight, visionRange: Double, separationRange: Double) ex
       other <- neighborhood
       position = other.position
       distance = center.position.distance(position)
-      if distance < visionRange
       difference = center.position - position
       normalize = difference.normalize * maxSpeed
     } yield (normalize / distance)

@@ -18,12 +18,12 @@ object Vector2D:
     @targetName("divide")
     def /(alpha: Double) = point * (1.0 / alpha)
     def normalize: Vector2D = Vector2D(x / norm, y / norm)
-    def norm: Double = math.hypot(x, y)
+    def norm: Double = math.sqrt(x * x + y * y)
     def limit(bound: Double): Vector2D = if (bound > norm)
       normalize * bound
     else
       point
-    def distance(other: Vector2D): Double = math.hypot(x - other.x, y - other.y)
+    def distance(other: Vector2D): Double = math.sqrt(math.pow(x - other.x, 2) + math.pow(y - other.y, 2))
   def randomPositionIn(rectangle2D: Rectangle2D)(using random: Random): Vector2D =
     val minX = rectangle2D.bottomLeft.x
     val minY = rectangle2D.bottomLeft.y

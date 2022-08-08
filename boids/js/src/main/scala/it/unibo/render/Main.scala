@@ -83,6 +83,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
 def flockingFactory: ConfigurationStore.Config => Flocking =
   config => Flocking(config.flockingWeights, config.visionRange, config.separationRange)
 
+// Todo to move
 def setupBoids(boundingBox: Rectangle2D, boidsCount: Int)(using Random): Environment =
   val centeringFactor = boundingBox.width / 10
   val center = boundingBox.center
