@@ -2,8 +2,19 @@ package it.unibo
 import p5.api.*
 
 import scala.scalajs.js
-class Slider(name: String, minBound: Double, maxBound: Double, initialValue: Double, position: (Double, Double)):
-  private val slider = createSlider(minBound, maxBound, initialValue, (maxBound - minBound) / 100)
+class Slider(
+    name: String,
+    minBound: Double,
+    maxBound: Double,
+    initialValue: Double,
+    position: (Double, Double),
+    ticks: Boolean = true
+):
+  private val slider =
+    if (ticks)
+      createSlider(minBound, maxBound, initialValue, (maxBound - minBound) / 100)
+    else
+      createSlider(minBound, maxBound, initialValue)
   private val size = 150
   private val textSizeFont = 15
   slider.position(position._1, position._2)

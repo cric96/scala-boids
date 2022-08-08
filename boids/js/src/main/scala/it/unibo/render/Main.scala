@@ -8,6 +8,7 @@ import it.unibo.core.dynamics.{Flocking, LinearVelocity}
 import it.unibo.core.simulation.Simulation
 import it.unibo.p5.{P5, P5Logic}
 import it.unibo.p5.api.*
+import monix.execution.Cancelable
 
 import concurrent.duration.DurationInt
 import scala.language.postfixOps
@@ -16,11 +17,15 @@ import scala.util.Random
 import scalajs.js
 import scala.math.atan
 import monix.execution.Scheduler.Implicits.global
+import org.scalajs.dom
+
+import java.net.URL
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
   // InitialValues
-  val boidsCount = 1000
+  var boidsCount = 500
   var boidHeight = 10
-  var environment: Environment = null
+  var environment: Environment = _
+  var simulation: Cancelable = _
   var sliders: Map[String, Slider] = Map.empty
   // Context
   given Random = Random(0)
@@ -31,13 +36,20 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     val bounds = boundingBox
     sliders = createSliders()
     environment = setupBoids(bounds, boidsCount)
-    Simulation(this, environment, this, flockingFactory, 33 millisecond)
+    simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
       .loop()
-      .runAsyncAndForget
+      .runAsync { _ => }
     canvas.style("display", "block")
     noLoop()
 
   override def draw(): Unit =
+    if (sliders("boidsCount").value.toInt != boidsCount)
+      boidsCount = sliders("boidsCount").value.toInt
+      simulation.cancel()
+      environment = setupBoids(boundingBox, boidsCount)
+      simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
+        .loop()
+        .runAsync { _ => }
     background(255)
     colorMode(HSB)
     val densityMap = DensityEvaluation.fromEnvironment(environment, sliders("precision").value, boundingBox)
@@ -86,7 +98,8 @@ def createSliders(): Map[String, Slider] =
     "cohesion" -> Slider("cohesion", 0, 3, 1, (10, 50)),
     "visionRange" -> Slider("visionRange", 20, 200, 50, (10, 70)),
     "separationRange" -> Slider("separationRange", 5, 100, 10, (10, 90)),
-    "precision" -> Slider("precision", 20, 400, 40, (10, 110))
+    "precision" -> Slider("precision", 20, 400, 40, (10, 110)),
+    "boidsCount" -> Slider("boids", 100, 1000, 400, (10, 130), false)
   )
 
 def drawDensityMap(boundingBox: Rectangle2D, precision: Double, densityEvaluation: DensityEvaluation): Unit =
@@ -108,4 +121,4 @@ def drawDensityMap(boundingBox: Rectangle2D, precision: Double, densityEvaluatio
   pop()
 
 def colorFromDensity(density: Double): Unit =
-  fill(10, 127, density, 0.5)
+  fill(0, 127, density, 0.5)
