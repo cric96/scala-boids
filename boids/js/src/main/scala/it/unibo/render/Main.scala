@@ -9,9 +9,6 @@ import it.unibo.core.simulation.Simulation
 import it.unibo.p5.{P5, P5Logic}
 import it.unibo.p5.api.*
 import monix.execution.Cancelable
-import typings.jsQuadtree.mod.QuadTree
-import typings.jsQuadtree.mod.Box
-
 import concurrent.duration.DurationInt
 import scala.language.postfixOps
 import scala.scalajs.js.annotation.{JSExportTopLevel, JSGlobal, JSGlobalScope, JSName}
@@ -44,6 +41,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
       .loop()
       .runAsync { _ => }
+
     val hideBoids = createButton("show boids");
     hideBoids.position(10, 10);
     hideBoids.mousePressed(_ => showBoids = !showBoids)
@@ -83,12 +81,12 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     redraw()
   P5(this)
 
-def flockingFactory: ConfigurationStore.Config => Dynamics =
-  config =>
-    Dynamics.combine(
-      Flocking(config.flockingWeights, config.visionRange, config.separationRange),
-      BorderForce(boundingBox)
-    )
+  def flockingFactory: ConfigurationStore.Config => Dynamics =
+    config =>
+      Dynamics.combine(
+        Flocking(config.flockingWeights, config.visionRange, config.separationRange, sliders("force").value),
+        BorderForce(boundingBox)
+      )
 
 def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, height))
 
@@ -101,7 +99,8 @@ def createSliders(): Map[String, Slider] =
     "separationRange" -> Slider("separationRange", 5, 100, 10, (10, 110)),
     "bucketSize" -> Slider("bucketDefinition", 10, 40, 20, (10, 130), false),
     "bucketRange" -> Slider("bucketRange", 20, 200, 100, (10, 150)),
-    "boidsCount" -> Slider("boids", 100, 1000, 400, (10, 170), false)
+    "boidsCount" -> Slider("boids", 100, 1000, 400, (10, 170), false),
+    "force" -> Slider("maxForce", 0.01, 0.1, 0.03, (10, 190))
   )
 
 def drawDensityMap(
@@ -120,4 +119,4 @@ def drawDensityMap(
   pop()
 
 def colorFromDensity(density: Double): Unit =
-  fill((1 - density) * 360, 127, density * 255, 0.5)
+  fill(((1.0f - density) * 0.85f - 0.15f) * 360, 127, 255, 1)

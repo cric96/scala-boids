@@ -6,10 +6,14 @@ import it.unibo.core.{Boid, Dynamics, Environment}
 import monix.eval.Task
 import monocle.syntax.all.*
 import monix.execution.Scheduler.Implicits.global
-class Flocking(weights: Weight, visionRange: Double, separationRange: Double) extends Dynamics:
+class Flocking(
+    weights: Weight,
+    visionRange: Double,
+    separationRange: Double,
+    maxForce: Double = 0.03,
+    maxSpeed: Double = 2
+) extends Dynamics:
   private val actuator = LinearVelocity()
-  private val maxForce = 0.03
-  private val maxSpeed = 2
   override def apply(environment: Environment): Task[Environment] =
     val centers = environment.all
       .map(center =>
