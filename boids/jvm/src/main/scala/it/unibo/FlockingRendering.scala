@@ -1,11 +1,11 @@
 package it.unibo
 
 import it.unibo.boundary.ConfigurationStore
-import it.unibo.core.{Boid, Environment}
+import it.unibo.core.{Boid, Dynamics, Environment, Environments, RTreeEnvironment}
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.simulation.Simulation
-import it.unibo.core.RTreeEnvironment
 import it.unibo.core.dynamics.Flocking
+import it.unibo.core.dynamics.BorderForce
 import it.unibo.render.SwingRender
 
 import concurrent.duration.DurationInt
@@ -19,24 +19,15 @@ object FlockingRendering extends App:
   given Random = Random(0)
   val render = new SwingRender()
   SwingUtilities.invokeLater(() =>
-    val simulation = Simulation(
+    Simulation(
       render,
-      setupBoids(render.bounds, 1000),
+      Environments.setupBoids(render.bounds, 1000),
       render,
-      flockingFactory,
+      flockingFactory(render.bounds),
       33 milliseconds
     ).loop().runAsyncAndForget
   )
 
-def setupBoids(boundingBox: Rectangle2D, boidsCount: Int)(using Random): Environment =
-  val centeringFactor = boundingBox.width / 10
-  val center = boundingBox.center
-  val delta = Vector2D(centeringFactor, centeringFactor)
-  val generatorBox = Rectangle2D(center - delta, center + delta)
-  val boids = Boid
-    .generator(Vector2D.randomPositionIn(generatorBox), Vector2D.randomUnitary)
-    .take(boidsCount)
-  RTreeEnvironment(boids, boundingBox)
-
-def flockingFactory: ConfigurationStore.Config => Flocking =
-  config => Flocking(config.flockingWeights, config.visionRange, config.separationRange)
+def flockingFactory(border: Rectangle2D): ConfigurationStore.Config => Dynamics =
+  config =>
+    Dynamics.combine(Flocking(config.flockingWeights, config.visionRange, config.separationRange), BorderForce(border))

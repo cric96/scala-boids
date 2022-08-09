@@ -18,6 +18,7 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
     Compile / npmDependencies ++=
       Seq(
         "@types/p5" -> "1.4.2",
+        "js-quadtree" -> "3.3.6",
         "p5" -> "1.4.2"
       ),
     scalaJSUseMainModuleInitializer := true,

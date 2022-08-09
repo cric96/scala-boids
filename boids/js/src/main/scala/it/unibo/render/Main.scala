@@ -3,12 +3,14 @@ package it.unibo.render
 import it.unibo.Slider
 import it.unibo.boundary.{ConfigurationStore, Renderer}
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
-import it.unibo.core.{Boid, DensityEvaluation, Environment, RTreeEnvironment}
-import it.unibo.core.dynamics.{Flocking, LinearVelocity}
+import it.unibo.core.{Boid, DensityEvaluation, DensityMap, Dynamics, Environment, Environments, RTreeEnvironment}
+import it.unibo.core.dynamics.{Flocking, LinearVelocity, BorderForce}
 import it.unibo.core.simulation.Simulation
 import it.unibo.p5.{P5, P5Logic}
 import it.unibo.p5.api.*
 import monix.execution.Cancelable
+import typings.jsQuadtree.mod.QuadTree
+import typings.jsQuadtree.mod.Box
 
 import concurrent.duration.DurationInt
 import scala.language.postfixOps
@@ -18,6 +20,7 @@ import scalajs.js
 import scala.math.atan
 import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
+
 import java.net.URL
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
   // Import part
@@ -37,13 +40,13 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     val canvas = createCanvas(windowWidth, windowHeight)
     val bounds = boundingBox
     sliders = createSliders()
-    environment = setupBoids(bounds, boidsCount)
+    environment = Environments.setupBoids(bounds, boidsCount)
     simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
       .loop()
       .runAsync { _ => }
     val hideBoids = createButton("show boids");
     hideBoids.position(10, 10);
-    hideBoids.mousePressed(data => showBoids = !showBoids)
+    hideBoids.mousePressed(_ => showBoids = !showBoids)
     canvas.style("display", "block")
     noLoop()
 
@@ -51,7 +54,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     if (sliders("boidsCount").value.toInt != boidsCount)
       boidsCount = sliders("boidsCount").value.toInt
       simulation.cancel()
-      environment = setupBoids(boundingBox, boidsCount)
+      environment = Environments.setupBoids(boundingBox, boidsCount)
       simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
         .loop()
         .runAsync { _ => }
@@ -80,19 +83,12 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     redraw()
   P5(this)
 
-def flockingFactory: ConfigurationStore.Config => Flocking =
-  config => Flocking(config.flockingWeights, config.visionRange, config.separationRange)
-
-// Todo to move
-def setupBoids(boundingBox: Rectangle2D, boidsCount: Int)(using Random): Environment =
-  val centeringFactor = boundingBox.width / 10
-  val center = boundingBox.center
-  val delta = Vector2D(centeringFactor, centeringFactor)
-  val generatorBox = Rectangle2D(center - delta, center + delta)
-  val boids = Boid
-    .generator(Vector2D.randomPositionIn(generatorBox), Vector2D.randomUnitary)
-    .take(boidsCount)
-  RTreeEnvironment(boids, boundingBox)
+def flockingFactory: ConfigurationStore.Config => Dynamics =
+  config =>
+    Dynamics.combine(
+      Flocking(config.flockingWeights, config.visionRange, config.separationRange),
+      BorderForce(boundingBox)
+    )
 
 def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, height))
 
@@ -114,28 +110,13 @@ def drawDensityMap(
     visionRange: Double,
     environment: Environment
 ): Unit =
-  val startX = boundingBox.bottomLeft.x
-  val startY = boundingBox.bottomLeft.y
-  def iterateUntil(start: Double, end: Double): LazyList[Double] =
-    LazyList.iterate(start)(_ + precision).takeWhile(_ < end)
-  val allCoords = for {
-    x <- iterateUntil(startX, boundingBox.topRight.x)
-    y <- iterateUntil(startY, boundingBox.topRight.y)
-  } yield (Vector2D(x, y))
+  val densityMap = DensityMap(boundingBox, precision, visionRange, environment)
   push()
   noStroke()
-  val densityMap = allCoords.map { coord =>
-    val bottomLeft = coord - (Vector2D(visionRange / 2, visionRange / 2))
-    val topRight = coord + (Vector2D(visionRange / 2, visionRange / 2))
-    val density = environment.getAllIn(bottomLeft, topRight).size
-    coord -> density
+  densityMap.foreach { (coord, density) =>
+    colorFromDensity(density)
+    rect(coord.x, coord.y, precision, precision)
   }
-  val maxDensityValue = densityMap.maxBy(_._2)._2
-  densityMap.foreach { (bottom, density) =>
-    colorFromDensity(density / maxDensityValue.toDouble)
-    rect(bottom.x, bottom.y, precision, precision)
-  }
-
   pop()
 
 def colorFromDensity(density: Double): Unit =
