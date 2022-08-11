@@ -6,4 +6,4 @@ trait ConfigurationStore:
   def getCurrentConfig(): Config
 
 object ConfigurationStore:
-  case class Config(flockingWeights: Flocking.Weight, visionRange: Double, separationRange: Double)
+  case class Config(flockingWeights: Flocking.Weight, visionRange: Double, separationRange: Double, maxForce: Double)

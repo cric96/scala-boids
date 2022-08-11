@@ -3,12 +3,13 @@ package it.unibo.render
 import it.unibo.Slider
 import it.unibo.boundary.{ConfigurationStore, Renderer}
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
-import it.unibo.core.{Boid, DensityEvaluation, DensityMap, Dynamics, Environment, Environments, RTreeEnvironment}
-import it.unibo.core.dynamics.{Flocking, LinearVelocity, BorderForce}
+import it.unibo.core.{Boid, DensityEvaluation, DensityMap, Dynamics, Environment, Environments, BoundedRTreeEnvironment}
+import it.unibo.core.dynamics.{BorderForce, DynamicFactory, Flocking, LinearVelocity}
 import it.unibo.core.simulation.Simulation
 import it.unibo.p5.{P5, P5Logic}
 import it.unibo.p5.api.*
 import monix.execution.Cancelable
+
 import concurrent.duration.DurationInt
 import scala.language.postfixOps
 import scala.scalajs.js.annotation.{JSExportTopLevel, JSGlobal, JSGlobalScope, JSName}
@@ -38,7 +39,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     val bounds = boundingBox
     sliders = createSliders()
     environment = Environments.setupBoids(bounds, boidsCount)
-    simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
+    simulation = Simulation(this, environment, this, DynamicFactory.flocking(bounds), 33 millisecond)
       .loop()
       .runAsync { _ => }
 
@@ -53,7 +54,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
       boidsCount = sliders("boidsCount").value.toInt
       simulation.cancel()
       environment = Environments.setupBoids(boundingBox, boidsCount)
-      simulation = Simulation(this, environment, this, flockingFactory, 33 millisecond)
+      simulation = Simulation(this, environment, this, DynamicFactory.flocking(boundingBox), 33 millisecond)
         .loop()
         .runAsync { _ => }
     background(255)
@@ -74,19 +75,17 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
 
   override def getCurrentConfig(): ConfigurationStore.Config =
     val flocks = Flocking.Weight(sliders("separation").value, sliders("align").value, sliders("cohesion").value)
-    ConfigurationStore.Config(flocks, sliders("visionRange").value, sliders("separationRange").value)
+    ConfigurationStore.Config(
+      flocks,
+      sliders("visionRange").value,
+      sliders("separationRange").value,
+      sliders("force").value
+    )
 
   override def render(environment: Environment): Unit =
     this.environment = environment
     redraw()
   P5(this)
-
-  def flockingFactory: ConfigurationStore.Config => Dynamics =
-    config =>
-      Dynamics.combine(
-        Flocking(config.flockingWeights, config.visionRange, config.separationRange, sliders("force").value),
-        BorderForce(boundingBox)
-      )
 
 def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, height))
 

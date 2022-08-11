@@ -7,11 +7,10 @@ import EuclideanPlane.*
 import it.unibo.core.geometry.Vector2D.Vector2D
 import monocle.syntax.all.*
 
-class RTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extends Environment:
+class BoundedRTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extends Environment:
   given Conversion[Double, Float] = _.toFloat
-  private val adjustedBoids =
-    boids
-      .map(boid => boid.focus(_.position).modify(Rectangle2D.wrapCornerRectanglePosition(boundingBox, _)))
+  private val adjustedBoids = boids
+    .map(boid => boid.focus(_.position).modify(Rectangle2D.wrapCornerRectanglePosition(boundingBox, _)))
 
   private val spatialIndex: RTree[Boid] =
     RTree(adjustedBoids.map(boid => entry(boid.position.x, boid.position.y, boid)))
@@ -24,6 +23,8 @@ class RTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extends Envir
       action
     else
       Seq.empty
+    val plainSearch = spatialIndex
+      .searchAll(x - range, y - range, x + range, y + range)
 
     val bottomCornerCondition = x - range < bottomX && y - range < bottomY
     val topCornerCondition = x + range > topX && y + range > topY
@@ -47,11 +48,10 @@ class RTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extends Envir
     val upCorner = evaluateOrEmpty(y + range > topY && !topCornerCondition) {
       spatialIndex.searchAll(x - range, bottomY, x + range, y + range)
     }
-    val plainSearch = spatialIndex
-      .searchAll(x - range, y - range, x + range, y + range)
 
     val otherSearch = upCorner ++ downCorner ++ rightCorner ++ topCorner ++ bottomCorner ++ leftCorner
-    (otherSearch ++ plainSearch)
+
+    plainSearch
       .map(_.value)
       .filter(_ != center)
   def getAllIn(bottomLeft: Vector2D, topRight: Vector2D): Seq[Boid] =
@@ -59,4 +59,4 @@ class RTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extends Envir
       .searchAll(bottomLeft.x, bottomLeft.y, topRight.x, topRight.y)
       .map(_.value)
   def all: Seq[Boid] = adjustedBoids
-  def replaceBoidsWith(boids: Seq[Boid]): Environment = RTreeEnvironment(boids, boundingBox)
+  def replaceBoidsWith(boids: Seq[Boid]): Environment = BoundedRTreeEnvironment(boids, boundingBox)

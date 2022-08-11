@@ -2,7 +2,7 @@ package it.unibo.core.geometry
 
 import scala.annotation.targetName
 import scala.util.Random
-
+import upickle.default._
 object Vector2D:
   opaque type Vector2D = (Double, Double)
   def apply(x: Double, y: Double): Vector2D = (x, y)
@@ -35,3 +35,5 @@ object Vector2D:
   def randomUnitary(using random: Random): Vector2D =
     val vector = (random.nextDouble() - 0.5, random.nextDouble() - 0.5)
     vector / vector.norm
+
+  given vectorMacroRW: ReadWriter[Vector2D] = macroRW

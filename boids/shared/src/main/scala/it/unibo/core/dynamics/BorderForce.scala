@@ -19,4 +19,4 @@ class BorderForce(bound: Rectangle2D) extends Dynamics:
     boid.focus(_.velocity).modify(v => (v + forceLeft + forceRight + forceTop + forceBottom).limit(1))
 
   private def forceFromDistance(distance: Double): Double =
-    1 / math.sqrt(distance + 1) * 1.7
+    1 / math.sqrt(distance + 1) * 2
