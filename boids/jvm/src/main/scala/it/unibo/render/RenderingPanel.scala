@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage
 import javax.swing.{BoxLayout, JButton, JPanel}
 import scala.collection.immutable.ListMap
 
-class RenderingPanel(var backgroundImage: Option[BufferedImage]) extends JPanel:
+class RenderingPanel(control: Boolean, var backgroundImage: Option[BufferedImage]) extends JPanel:
   private val contentPanel = JPanel()
   private val buttonPanel = JPanel()
   private var showBoids = false
@@ -19,7 +19,8 @@ class RenderingPanel(var backgroundImage: Option[BufferedImage]) extends JPanel:
     name -> Slider(name, min, max, value)
   }
   sliders.map(_._2.render).foreach(contentPanel.add)
-  this.add(contentPanel, BorderLayout.WEST)
+  if (control)
+    this.add(contentPanel, BorderLayout.WEST)
   this.add(buttonPanel, BorderLayout.NORTH)
   showBoidsButton.addActionListener(_ => showBoids = !showBoids)
   def parametersOf(param: Parameters): Double = sliders(param).value

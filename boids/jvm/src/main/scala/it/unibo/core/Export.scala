@@ -7,11 +7,18 @@ import it.unibo.core.simulation.Simulation
 import org.rogach.scallop.*
 import it.unibo.core.dynamics.DynamicFactory
 import monix.eval.Task
+import monix.execution.Cancelable
 import monix.execution.Scheduler.Implicits.global
+import it.unibo.render.SwingRender
+import monix.execution.BufferCapacity.Unbounded
+import concurrent.duration.DurationInt
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import upickle.default.*
+
+import javax.swing.SwingUtilities
+import scala.language.postfixOps
 
 class Configuration(arguments: Seq[String]) extends ScallopConf(arguments):
   val boids: ScallopOption[Int] = opt[Int](required = true)
@@ -39,7 +46,7 @@ class Export(seed: Int) extends Renderer:
     allFrame.addOne(frameCount -> environment.all)
     frameCount += 1
   def close(): Unit =
-    os.write(os.pwd / "res" / seed.toString, writeBinary(allFrame))
+    os.write(os.pwd / "res" / seed.toString, write[Seq[(Int, Seq[Boid])]](allFrame.toSeq))
 
 class SingleStore(config: Configuration) extends ConfigurationStore:
   import config._
@@ -60,5 +67,19 @@ class SingleStore(config: Configuration) extends ConfigurationStore:
     .map { case (render, simulation) => simulation.loopFor(steps()).map(_ => render.close()) }
 
   val parallelExecution = Task.parSequence(simulations)
-  val timeBefore = System.currentTimeMillis()
   parallelExecution.runSyncUnsafe()
+
+@main def reproduce(path: String): Unit =
+  val file = os.pwd / os.RelPath(path)
+  val data = read[Seq[(Int, Seq[Boid])]](os.read(file))
+  val dynamics = DynamicsFromExport(data)
+  val render = SwingRender(false)
+  SwingUtilities.invokeLater(() => createSimulation)
+
+  def createSimulation = Simulation(
+    render,
+    UnboundedRTreeEnvironment(Seq.empty),
+    render,
+    _ => dynamics,
+    16 milliseconds
+  ).loop().runAsync(_ => ())

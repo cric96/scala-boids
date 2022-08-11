@@ -24,13 +24,15 @@ import javax.swing.{BoxLayout, JButton, JComponent, JFrame, JLabel, JPanel, JSli
 import java.awt.geom.AffineTransform
 import scala.collection.immutable.{ListMap, TreeMap}
 /** */
-class SwingRender(var boidsCountStrategy: Int => Unit = _ => ()) extends Renderer with ConfigurationStore:
+class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit = _ => ())
+    extends Renderer
+    with ConfigurationStore:
   private val config = GraphicsEnvironment.getLocalGraphicsEnvironment.getDefaultScreenDevice.getDefaultConfiguration
   private val frame = new JFrame()
   frame.setExtendedState(Frame.MAXIMIZED_BOTH)
   frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
   frame.setVisible(true)
-  private val renderingFrame = RenderingPanel(None)
+  private val renderingFrame = RenderingPanel(control, None)
   frame.setContentPane(renderingFrame)
 
   def bounds: Rectangle2D =
