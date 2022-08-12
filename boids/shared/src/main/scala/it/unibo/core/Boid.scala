@@ -10,3 +10,9 @@ object Boid:
   ): LazyList[Boid] = LazyList.continually(Boid(positionGenerator, velocityGenerator))
 
   given boidMacro: ReadWriter[Boid] = macroRW[Boid]
+
+  extension (boid: Boid)
+    def simplify(precision: Int): Boid = boid.copy(
+      position = boid.position.roundAt(precision),
+      velocity = boid.velocity.roundAt(precision)
+    )

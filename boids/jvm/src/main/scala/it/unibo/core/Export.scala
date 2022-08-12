@@ -10,7 +10,9 @@ import monix.eval.Task
 import monix.execution.Cancelable
 import monix.execution.Scheduler.Implicits.global
 import it.unibo.render.SwingRender
+import monix.catnap.Semaphore
 import monix.execution.BufferCapacity.Unbounded
+import it.unibo.core.geometry.Vector2D.Vector2D
 import concurrent.duration.DurationInt
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -43,10 +45,16 @@ class Export(seed: Int) extends Renderer:
   var frameCount = 0
   val allFrame: mutable.ListBuffer[(Int, Seq[Boid])] = ListBuffer.empty
   override def render(environment: Environment): Unit =
-    allFrame.addOne(frameCount -> environment.all)
+    allFrame.addOne(frameCount -> environment.all.map(_.simplify(2)))
     frameCount += 1
   def close(): Unit =
     os.write(os.pwd / "res" / seed.toString, write[Seq[(Int, Seq[Boid])]](allFrame.toSeq))
+    os.write(
+      os.pwd / "res" / s"condensed-$seed",
+      write[Seq[Seq[Vector2D]]](allFrame.toSeq.map(_._2.map(_.position)))
+    )
+
+    allFrame.clear()
 
 class SingleStore(config: Configuration) extends ConfigurationStore:
   import config._
@@ -66,9 +74,12 @@ class SingleStore(config: Configuration) extends ConfigurationStore:
     }
     .map { case (render, simulation) => simulation.loopFor(steps()).map(_ => render.close()) }
 
-  val parallelExecution = Task.parSequence(simulations)
-  parallelExecution.runSyncUnsafe()
+  val allSimulations = for {
+    semaphore <- Semaphore[Task](provisioned = Runtime.getRuntime.availableProcessors())
+    _ <- Task.parSequence(simulations.map(semaphore.withPermit))
+  } yield ()
 
+  allSimulations.runSyncUnsafe()
 @main def reproduce(path: String): Unit =
   val file = os.pwd / os.RelPath(path)
   val data = read[Seq[(Int, Seq[Boid])]](os.read(file))

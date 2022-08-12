@@ -24,6 +24,11 @@ object Vector2D:
     else
       point
     def distance(other: Vector2D): Double = math.sqrt(math.pow(x - other.x, 2) + math.pow(y - other.y, 2))
+    def roundAt(digits: Int): Vector2D =
+      (
+        BigDecimal(x).setScale(digits, BigDecimal.RoundingMode.HALF_UP).toDouble,
+        BigDecimal(y).setScale(digits, BigDecimal.RoundingMode.HALF_UP).toDouble
+      )
   def randomPositionIn(rectangle2D: Rectangle2D)(using random: Random): Vector2D =
     val minX = rectangle2D.bottomLeft.x
     val minY = rectangle2D.bottomLeft.y
@@ -36,4 +41,8 @@ object Vector2D:
     val vector = (random.nextDouble() - 0.5, random.nextDouble() - 0.5)
     vector / vector.norm
 
-  given vectorMacroRW: ReadWriter[Vector2D] = macroRW
+  given vectorMacroRW: ReadWriter[Vector2D] = readwriter[ujson.Arr].bimap[Vector2D](
+    vector => ujson.Arr(vector.x, vector.y),
+    json => (json(0).num, json(1).num)
+  )
+//macroRW
