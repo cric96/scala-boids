@@ -1,5 +1,5 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.1.3"
+ThisBuild / scalaVersion := "3.3.3"
 
 lazy val boids = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
