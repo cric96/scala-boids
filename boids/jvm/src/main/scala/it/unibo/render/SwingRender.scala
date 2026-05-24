@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage
 import javax.swing.{BoxLayout, JButton, JComponent, JFrame, JLabel, JPanel, JSlider, WindowConstants}
 import java.awt.geom.AffineTransform
 import scala.collection.immutable.{ListMap, TreeMap}
+
 /** */
 class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit = _ => ())
     extends Renderer

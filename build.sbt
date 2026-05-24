@@ -1,5 +1,5 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.3.3"
+ThisBuild / scalaVersion := "3.3.7"
 
 lazy val boids = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
@@ -7,11 +7,11 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "scala-boids",
     libraryDependencies ++= Seq(
-      "com.github.plokhotnyuk.rtree2d" %%% "rtree2d-core" % "0.11.11",
+      "com.github.plokhotnyuk.rtree2d" %%% "rtree2d-core" % "0.11.14",
       "io.monix" %%% "monix" % "3.4.0",
-      "dev.optics" %%% "monocle-core" % "3.1.0",
-      "dev.optics" %%% "monocle-macro" % "3.1.0",
-      "com.lihaoyi" %%% "upickle" % "2.0.0"
+      "dev.optics" %%% "monocle-core" % "3.3.0",
+      "dev.optics" %%% "monocle-macro" % "3.3.0",
+      "com.lihaoyi" %%% "upickle" % "4.4.3"
     )
   )
   .jsConfigure(p => p.enablePlugins(ScalablyTypedConverterPlugin))
@@ -26,8 +26,8 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "org.rogach" %% "scallop" % "4.1.0",
-      "com.lihaoyi" %% "os-lib" % "0.8.1"
+      "org.rogach" %% "scallop" % "5.1.0",
+      "com.lihaoyi" %% "os-lib" % "0.11.3"
     )
   )
 lazy val root = (project in file("."))

@@ -17,7 +17,7 @@ object DensityMap:
     val allCoords = for {
       x <- iterateUntil(startX, boundingBox.topRight.x)
       y <- iterateUntil(startY, boundingBox.topRight.y)
-    } yield (Vector2D(x, y))
+    } yield Vector2D(x, y)
     val densityMap = allCoords.map { coord =>
       val bottomLeft = coord - (Vector2D(visionRange / 2, visionRange / 2))
       val topRight = coord + (Vector2D(visionRange / 2, visionRange / 2))

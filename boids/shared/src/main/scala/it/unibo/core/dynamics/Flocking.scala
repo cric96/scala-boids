@@ -39,7 +39,7 @@ class Flocking(
       distance = center.position.distance(position)
       difference = center.position - position
       normalize = difference.normalize * maxSpeed
-    } yield (normalize / distance)
+    } yield normalize / distance
 
     if (separationForces.isEmpty) { zero }
     else
