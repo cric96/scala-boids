@@ -13,13 +13,12 @@ class Flocking(
     maxForce: Double = 0.03,
     maxSpeed: Double = 2
 ) extends Dynamics:
-  private val actuator = LinearVelocity()
   override def apply(environment: Environment): IO[Environment] =
     environment.all
       .grouped(chunkSize(environment.all.size))
       .toVector
       .parTraverse(chunk => IO(chunk.map(steer(environment))))
-      .flatMap(evaluation => actuator(environment.replaceBoidsWith(evaluation.flatten)))
+      .map(evaluation => environment.replaceBoidsWith(evaluation.flatten))
 
   /** One chunk per core: a fiber per boid costs more than the boid itself (and Scala.js has a single core). */
   private def chunkSize(boids: Int): Int =

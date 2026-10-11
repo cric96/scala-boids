@@ -20,8 +20,13 @@ class FlockingSuite extends munit.CatsEffectSuite:
     assertEqualsDouble(actual.x, expected.x, 1e-6)
     assertEqualsDouble(actual.y, expected.y, 1e-6)
 
+  test("a step moves every boid by its new velocity exactly once"):
+    dynamics(start).map(world =>
+      start.all.zip(world.all).foreach((before, after) => assertClose(after.position, before.position + after.velocity))
+    )
+
   test("three steps match the recorded snapshot"):
     run(3).map { world =>
-      assertClose(world.all.map(_.position).reduce(_ + _), Vector2D(5069.44492026864, 5031.47111951853))
-      assertClose(world.all.map(_.velocity).reduce(_ + _), Vector2D(9.12860044298517, 6.0932085004327465))
+      assertClose(world.all.map(_.position).reduce(_ + _), Vector2D(5047.174770499211, 5016.588681845119))
+      assertClose(world.all.map(_.velocity).reduce(_ + _), Vector2D(9.160863752125058, 6.142195339666757))
     }

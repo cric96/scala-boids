@@ -9,5 +9,6 @@ object DynamicFactory:
     config =>
       Dynamics.combine(
         Flocking(config.flockingWeights, config.visionRange, config.separationRange, config.maxForce),
-        BorderForce(bound)
+        BorderForce(bound),
+        LinearVelocity()
       )

@@ -5,10 +5,8 @@ import it.unibo.core.{Boid, Dynamics, Environment}
 import cats.effect.IO
 import monocle.syntax.all._
 class BorderForce(bound: Rectangle2D, maxSpeed: Double = 2) extends Dynamics:
-  val actuator = LinearVelocity()
   override def apply(environment: Environment): IO[Environment] =
-    val boidsBounded = environment.all.map(avoidWall)
-    actuator(environment.replaceBoidsWith(boidsBounded))
+    IO(environment.replaceBoidsWith(environment.all.map(avoidWall)))
 
   def avoidWall(boid: Boid): Boid =
     val position = boid.position
