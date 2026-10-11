@@ -1,6 +1,7 @@
 package it.unibo.render
 
 import it.unibo.boundary.{ConfigurationStore, Renderer}
+import it.unibo.boundary.Parameter.*
 import it.unibo.core.{DensityEvaluation, DensityMap, Environment}
 import it.unibo.core.dynamics.Flocking
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
@@ -28,6 +29,7 @@ import scala.collection.immutable.{ListMap, TreeMap}
 class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit = _ => ())
     extends Renderer
     with ConfigurationStore:
+  Theme.install()
   private val config = GraphicsEnvironment.getLocalGraphicsEnvironment.getDefaultScreenDevice.getDefaultConfiguration
   private val frame = new JFrame()
   frame.setExtendedState(Frame.MAXIMIZED_BOTH)
@@ -44,10 +46,10 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     val renderingContext = image.getGraphics
     renderingContext.setColor(Color.white)
     renderingContext.fillRect(0, 0, frame.getWidth, frame.getHeight)
-    boidsCountStrategy(renderingFrame.parametersOf("boidsCount").toInt)
-    val precision = renderingFrame.parametersOf("bucketSize")
+    boidsCountStrategy(renderingFrame.parametersOf(BoidsCount).toInt)
+    val precision = renderingFrame.parametersOf(BucketSize)
     renderingFrame.backgroundImage = Some(image)
-    val densityMap = DensityMap(bounds, precision.toInt, renderingFrame.parametersOf("bucketRange"), environment)
+    val densityMap = DensityMap(bounds, precision.toInt, renderingFrame.parametersOf(BucketRange), environment)
     densityMap.foreach { (coord, density) =>
       val result = (1.0f - density) * 0.85f - 0.15f
       renderingContext.setColor(new Color(Color.HSBtoRGB(result.toFloat, 1, 0.5)))
@@ -65,10 +67,4 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     frame.repaint()
 
   override def getCurrentConfig(): ConfigurationStore.Config =
-    val C = renderingFrame
-    ConfigurationStore.Config(
-      Flocking.Weight(C.parametersOf("separation"), C.parametersOf("align"), C.parametersOf("cohesion")),
-      C.parametersOf("visionRange"),
-      C.parametersOf("separationRange"),
-      C.parametersOf("force")
-    )
+    ConfigurationStore.Config.from(renderingFrame.parametersOf)

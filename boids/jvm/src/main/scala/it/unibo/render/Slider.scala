@@ -1,19 +1,28 @@
 package it.unibo.render
 
-import java.awt.{Color, Dimension}
-import javax.swing.{JComponent, JLabel, JPanel, JSlider}
+import it.unibo.boundary.Parameter
 
-private class Slider(name: String, start: Double, end: Double, initialValue: Double):
-  private val context = JPanel()
-  private val slider = JSlider(0, 100, reverseValue(initialValue))
-  private val label = JLabel(s"$name $initialValue")
-  context.setPreferredSize(Dimension(200, 10))
-  context.setBackground(Color(0, 0, 0, 0))
-  slider.setBackground(Color(0, 0, 0, 0))
-  label.setForeground(Color(255, 255, 255))
-  context.add(slider)
-  context.add(label)
+import java.awt.BorderLayout
+import javax.swing.{BorderFactory, JComponent, JLabel, JPanel, JSlider}
+
+/** A labelled slider bound to a [[Parameter]]: the JSlider moves over integer ticks, one per parameter step. */
+private class Slider(parameter: Parameter):
+  private val slider = JSlider(0, tickOf(parameter.max), tickOf(parameter.default))
+  private val output = JLabel()
+  private val context = JPanel(BorderLayout())
+  private val header = JPanel(BorderLayout())
+  output.setForeground(Theme.accent)
+  header.add(JLabel(parameter.label), BorderLayout.WEST)
+  header.add(output, BorderLayout.EAST)
+  context.add(header, BorderLayout.NORTH)
+  context.add(slider, BorderLayout.CENTER)
+  context.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0))
+  Seq(context, header, slider).foreach(_.setOpaque(false))
+  slider.addChangeListener(_ => refresh())
+  refresh()
+
   def render: JComponent = context
-  def update: Unit = label.setText(s"$name $value")
-  def value: Double = (slider.getValue / 100.0) * (end - start) + start
-  private def reverseValue(double: Double): Int = ((double - start) / (end - start) * 100).toInt
+  def value: Double = parameter.min + slider.getValue * parameter.step
+  def reset(): Unit = slider.setValue(tickOf(parameter.default))
+  private def refresh(): Unit = output.setText(parameter.format(value))
+  private def tickOf(value: Double): Int = ((value - parameter.min) / parameter.step).round.toInt

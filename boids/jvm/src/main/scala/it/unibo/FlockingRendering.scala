@@ -1,6 +1,6 @@
 package it.unibo
 
-import it.unibo.boundary.ConfigurationStore
+import it.unibo.boundary.{ConfigurationStore, Parameter}
 import it.unibo.core.{Boid, Dynamics, Environment, Environments, BoundedRTreeEnvironment}
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.simulation.Simulation
@@ -18,7 +18,7 @@ import javax.swing.SwingUtilities
 object FlockingRendering extends App:
   given Random = Random(0)
   var cancelSimulation: () => Future[Unit] = _
-  var lastCount = 1000
+  var lastCount = Parameter.BoidsCount.default.toInt
   val render = SwingRender()
   render.boidsCountStrategy = boidsCount =>
     if (boidsCount != lastCount) {
