@@ -48,7 +48,6 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     renderingContext.fillRect(0, 0, frame.getWidth, frame.getHeight)
     boidsCountStrategy(renderingFrame.parametersOf(BoidsCount).toInt)
     val precision = renderingFrame.parametersOf(BucketSize)
-    renderingFrame.backgroundImage = Some(image)
     val densityMap = DensityMap(bounds, precision.toInt, renderingFrame.parametersOf(BucketRange), environment)
     densityMap.foreach { (coord, density) =>
       val result = (1.0f - density) * 0.85f - 0.15f
@@ -63,6 +62,7 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
       if (renderingFrame.boidsEnabled)
         renderingContext.asInstanceOf[Graphics2D].fill(transform.createTransformedShape(shape))
     )
+    renderingFrame.backgroundImage = Some(image)
     frame.validate()
     frame.repaint()
 
