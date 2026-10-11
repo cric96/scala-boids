@@ -11,6 +11,11 @@ case class Rectangle2D(bottomLeft: Vector2D, topRight: Vector2D):
   /** The point brought inside as on a torus: leaving from one side enters from the opposite one. */
   def wrap(point: Vector2D): Vector2D =
     Vector2D(Rectangle2D.wrap(point.x, bottomLeft.x, width), Rectangle2D.wrap(point.y, bottomLeft.y, height))
+
+  /** The shortest displacement from `from` to `to` on the torus, across a side when that is the shorter way. */
+  def offset(from: Vector2D, to: Vector2D): Vector2D =
+    val difference = to - from
+    Vector2D(Rectangle2D.wrap(difference.x, -width / 2, width), Rectangle2D.wrap(difference.y, -height / 2, height))
 object Rectangle2D:
   private def wrap(value: Double, start: Double, size: Double): Double =
     val offset = (value - start) % size
