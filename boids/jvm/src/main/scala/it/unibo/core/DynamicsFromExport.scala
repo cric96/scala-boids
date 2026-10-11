@@ -9,4 +9,4 @@ class DynamicsFromExport(val data: Seq[(Int, Seq[Boid])]) extends Dynamics:
     }
     val current = localData.head
     localData = localData.tail
-    IO(GridEnvironment(current._2))
+    IO(environment.replaceBoidsWith(current._2))

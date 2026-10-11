@@ -81,7 +81,7 @@ class SingleStore(config: Configuration) extends ConfigurationStore:
 
   def createSimulation = Simulation(
     render,
-    GridEnvironment(Seq.empty),
+    GridEnvironment(Seq.empty, render.bounds),
     render,
     _ => dynamics,
     16 milliseconds

@@ -18,7 +18,8 @@ class FlockingSuite extends munit.CatsEffectSuite:
         Vector2D.randomUnitary * (random.nextDouble() * 2 * Settings.constants.maxSpeed)
       )
       .take(population)
-      .toVector
+      .toVector,
+    screen
   )
 
   test("a step moves every boid by its new velocity exactly once"):
@@ -34,7 +35,7 @@ class FlockingSuite extends munit.CatsEffectSuite:
       val middleOfSide = screen.center + Vector2D(side.x * screen.width, side.y * screen.height) / 2
       Boid(middleOfSide, side * Settings.constants.maxSpeed)
     )
-    dynamics(GridEnvironment(crossing)).map(world =>
+    dynamics(GridEnvironment(crossing, screen)).map(world =>
       outwards.zip(crossing).zip(world.all).foreach { case ((side, before), after) =>
         val acrossTheScreen = Vector2D(side.x * screen.width, side.y * screen.height)
         assertEquals(after.position, before.position + before.velocity - acrossTheScreen)
@@ -49,7 +50,8 @@ class FlockingSuite extends munit.CatsEffectSuite:
   test("boids sharing the same position stay finite"):
     val overlapping =
       GridEnvironment(
-        Boid.generator(screen.center, Vector2D.randomUnitary).take(Settings.constants.neighbours).toVector
+        Boid.generator(screen.center, Vector2D.randomUnitary).take(Settings.constants.neighbours).toVector,
+        screen
       )
     dynamics(overlapping).map(
       _.all.foreach(boid => assert(boid.position.norm.isFinite && boid.velocity.norm.isFinite, boid))
