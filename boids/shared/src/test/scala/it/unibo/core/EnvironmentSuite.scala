@@ -12,7 +12,7 @@ class EnvironmentSuite extends munit.CatsEffectSuite:
     val range = 5.0
     environment.all.foreach { center =>
       val expected = environment.all.filter(other =>
-        other != center &&
+        (other ne center) &&
           (other.position.x - center.position.x).abs <= range &&
           (other.position.y - center.position.y).abs <= range
       )

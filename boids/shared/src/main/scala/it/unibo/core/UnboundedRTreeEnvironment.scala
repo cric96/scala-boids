@@ -11,11 +11,10 @@ class UnboundedRTreeEnvironment(boids: Seq[Boid]) extends Environment:
   def nearTo(center: Boid, range: Double): Seq[Boid] =
     val centerPosition = center.position
     val (x, y) = (centerPosition.x, centerPosition.y)
-    val plainSearch = spatialIndex
+    // identity rather than equality: the case-class equality boxes the coordinates of every neighbour
+    spatialIndex
       .searchAll(x - range, y - range, x + range, y + range)
-    plainSearch
-      .map(_.value)
-      .filter(_ != center)
+      .collect { case entry if entry.value ne center => entry.value }
   def getAllIn(bottomLeft: Vector2D, topRight: Vector2D): Seq[Boid] =
     spatialIndex
       .searchAll(bottomLeft.x, bottomLeft.y, topRight.x, topRight.y)
