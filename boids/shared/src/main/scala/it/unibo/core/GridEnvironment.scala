@@ -18,12 +18,15 @@ class GridEnvironment(boids: Seq[Boid], bounds: Rectangle2D, cellSize: Double = 
 
   def nearTo(center: Boid, range: Double, count: Int): Seq[Boid] =
     val (column, row) = cellOf(center.position)
-    GridEnvironment.rings
-      .take((range / cellWidth.min(cellHeight)).ceil.toInt + 1)
+    val lastRing = (range / cellWidth.min(cellHeight)).ceil.toInt
+    val cellsAround = GridEnvironment.rings
+      .take(lastRing + 1)
       .iterator
       .flatten
       .map((dx, dy) => (Math.floorMod(column + dx, columns), Math.floorMod(row + dy, rows)))
-      .distinct // on a small torus the outer rings wrap onto the inner ones
+    // only on a torus narrower than the rings do the outer rings wrap onto the inner ones
+    val uniqueCells = if (2 * lastRing + 1 > columns.min(rows)) cellsAround.distinct else cellsAround
+    uniqueCells
       .flatMap(cells.getOrElse(_, Nil))
       .filter(other => (other ne center) && bounds.offset(center.position, other.position).norm < range)
       .take(count)
