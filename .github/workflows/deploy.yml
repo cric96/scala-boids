@@ -9,7 +9,7 @@ jobs:
       # Using matrix build even if not needed
       matrix:
         os: [ ubuntu-latest ]
-        jvm_version: [ 11 ]
+        jvm_version: [ 17 ]
     runs-on: ${{ matrix.os }}
     env:
       JAVA_VERSION: ${{ matrix.jvm_version }}
@@ -18,17 +18,21 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: recursive
       - name: Fetch tags
         shell: bash
         run: git fetch --tags -f
-      - name: Setup Scala with Java ${{ matrix.jvm_version }}
-        uses: olafurpg/setup-scala@v10
+      - name: Setup Java ${{ matrix.jvm_version }}
+        uses: actions/setup-java@v4
         with:
-          java-version: adopt@1.${{ matrix.java }}
+          distribution: temurin
+          java-version: ${{ matrix.jvm_version }}
+          cache: sbt
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
