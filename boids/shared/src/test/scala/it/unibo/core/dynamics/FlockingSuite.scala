@@ -25,7 +25,20 @@ class FlockingSuite extends munit.CatsEffectSuite:
     dynamics(start).map(world =>
       start.all
         .zip(world.all)
-        .foreach((before, after) => assertEquals(after.position, before.position + after.velocity))
+        .foreach((before, after) => assertEquals(after.position, screen.wrap(before.position + after.velocity)))
+    )
+
+  test("boids crossing a side of the screen enter from the opposite one"):
+    val outwards = Seq(Vector2D(-1, 0), Vector2D(1, 0), Vector2D(0, -1), Vector2D(0, 1))
+    val crossing = outwards.map(side =>
+      val middleOfSide = screen.center + Vector2D(side.x * screen.width, side.y * screen.height) / 2
+      Boid(middleOfSide, side * Settings.constants.maxSpeed)
+    )
+    dynamics(GridEnvironment(crossing)).map(world =>
+      outwards.zip(crossing).zip(world.all).foreach { case ((side, before), after) =>
+        val acrossTheScreen = Vector2D(side.x * screen.width, side.y * screen.height)
+        assertEquals(after.position, before.position + before.velocity - acrossTheScreen)
+      }
     )
 
   test("no boid is faster than the speed cap"):

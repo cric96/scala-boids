@@ -14,13 +14,8 @@ object Settings:
     *   speed cap of every boid, in pixels per step
     * @param neighbours
     *   how many mates a boid follows at most: like starlings only the nearest ones, which also bounds the work per boid
-    * @param borderMargin
-    *   distance from a wall within which boids are pushed back
-    * @param borderStrength
-    *   push on a boid touching a wall, decaying with the square root of the distance
     */
-  case class Constants(maxSpeed: Double, neighbours: Int, borderMargin: Double, borderStrength: Double)
-      derives ReadWriter
+  case class Constants(maxSpeed: Double, neighbours: Int) derives ReadWriter
 
   lazy val current: Settings = parse(ParametersJson.text)
   def constants: Constants = current.constants

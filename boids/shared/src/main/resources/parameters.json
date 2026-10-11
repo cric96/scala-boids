@@ -12,8 +12,6 @@
   },
   "constants": {
     "maxSpeed": 2,
-    "neighbours": 20,
-    "borderMargin": 50,
-    "borderStrength": 2
+    "neighbours": 20
   }
 }

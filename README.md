@@ -63,7 +63,7 @@ To build the static site deployed on GitHub Pages, run `npm run build` (output i
 
 ## 🎛️ Parameters
 
-The slider ranges and defaults, and the simulation constants (speed cap, neighbours per boid, border margin and strength), live in [`boids/shared/src/main/resources/parameters.json`](boids/shared/src/main/resources/parameters.json). sbt embeds the file at build time, so the JVM and the web version always share the same settings: edit it and rebuild.
+The slider ranges and defaults, and the simulation constants (speed cap, neighbours per boid), live in [`boids/shared/src/main/resources/parameters.json`](boids/shared/src/main/resources/parameters.json). sbt embeds the file at build time, so the JVM and the web version always share the same settings: edit it and rebuild.
 
 ---
 

@@ -5,7 +5,7 @@ import it.unibo.boundary.{ConfigurationStore, Parameter, Renderer}
 import it.unibo.boundary.Parameter.*
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.{Boid, DensityMap, Dynamics, Environment, Environments}
-import it.unibo.core.dynamics.{BorderForce, DynamicFactory, Flocking, LinearVelocity}
+import it.unibo.core.dynamics.{DynamicFactory, Flocking}
 import it.unibo.core.simulation.Simulation
 import it.unibo.p5.{Element, P5, P5Logic}
 import it.unibo.p5.api.*

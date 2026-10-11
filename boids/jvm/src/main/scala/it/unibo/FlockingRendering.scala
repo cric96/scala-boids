@@ -4,7 +4,7 @@ import it.unibo.boundary.{ConfigurationStore, Parameter}
 import it.unibo.core.{Boid, Dynamics, Environment, Environments}
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.simulation.Simulation
-import it.unibo.core.dynamics.{BorderForce, DynamicFactory, Flocking}
+import it.unibo.core.dynamics.{DynamicFactory, Flocking}
 import it.unibo.render.SwingRender
 import cats.effect.unsafe.implicits.global
 
