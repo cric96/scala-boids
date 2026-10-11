@@ -16,10 +16,11 @@ import java.awt.{
   Graphics2D,
   GraphicsEnvironment,
   GridLayout,
+  Polygon,
   Rectangle,
+  RenderingHints,
   geom
 }
-import java.awt.geom.Ellipse2D
 import java.awt.image.BufferedImage
 import javax.swing.{BoxLayout, JButton, JComponent, JFrame, JLabel, JPanel, JSlider, WindowConstants}
 import java.awt.geom.AffineTransform
@@ -37,6 +38,8 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
   frame.setVisible(true)
   private val renderingFrame = RenderingPanel(control, None)
   frame.setContentPane(renderingFrame)
+  // Same triangle as the web version (`Main.draw`): tip ahead of the boid, white with a black outline
+  private val boidShape = Polygon(Array(0, 5, -5), Array(-10, 5, 5), 3)
 
   def bounds: Rectangle2D =
     Rectangle2D(Vector2D(0, 0), Vector2D(frame.getWidth, frame.getHeight))
@@ -54,14 +57,18 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
       renderingContext.setColor(new Color(Color.HSBtoRGB(result.toFloat, 1, 0.5)))
       renderingContext.fillRect(coord.x.toInt, coord.y.toInt, precision.toInt, precision.toInt)
     }
-    environment.all.foreach(boid =>
-      renderingContext.setColor(new Color(1, 1, 1, 0.5f))
-      val transform = AffineTransform.getTranslateInstance(boid.position.x, boid.position.y)
-      transform.rotate(math.atan2(boid.velocity.y, boid.velocity.x) + Math.PI / 2)
-      val shape = Ellipse2D.Double(0, 0, 5, 10)
-      if (renderingFrame.boidsEnabled)
-        renderingContext.asInstanceOf[Graphics2D].fill(transform.createTransformedShape(shape))
-    )
+    val graphics = renderingContext.asInstanceOf[Graphics2D]
+    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    if (renderingFrame.boidsEnabled)
+      environment.all.foreach(boid =>
+        val transform = AffineTransform.getTranslateInstance(boid.position.x, boid.position.y)
+        transform.rotate(math.atan2(boid.velocity.y, boid.velocity.x) + Math.PI / 2)
+        val triangle = transform.createTransformedShape(boidShape)
+        graphics.setColor(Color.white)
+        graphics.fill(triangle)
+        graphics.setColor(Color.black)
+        graphics.draw(triangle)
+      )
     renderingFrame.backgroundImage = Some(image)
     frame.validate()
     frame.repaint()
