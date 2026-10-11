@@ -12,8 +12,7 @@ object api extends js.Object:
   val height: Double = js.native
   val windowWidth: Double = js.native
   val windowHeight: Double = js.native
-  val HSB: String = js.native
-  val HALF_PI: Double = js.native
+  val drawingContext: js.Dynamic = js.native
   def createCanvas(width: Double, height: Double): Element = js.native
   def createButton(label: String): Element = js.native
   def createDiv(html: String = js.native): Element = js.native
@@ -23,17 +22,6 @@ object api extends js.Object:
   def noLoop(): Unit = js.native
   def redraw(): Unit = js.native
   def background(gray: Double): Unit = js.native
-  def colorMode(mode: String): Unit = js.native
-  def fill(v1: Double, v2: Double = js.native, v3: Double = js.native, alpha: Double = js.native): Unit = js.native
-  def noStroke(): Unit = js.native
-  def push(): Unit = js.native
-  def pop(): Unit = js.native
-  def translate(x: Double, y: Double): Unit = js.native
-  def rotate(angle: Double): Unit = js.native
-  def rect(x: Double, y: Double, width: Double, height: Double): Unit = js.native
-  def triangle(x1: Double, y1: Double, x2: Double, y2: Double, x3: Double, y3: Double): Unit = js.native
-  def textSize(size: Double): Unit = js.native
-  def text(content: String, x: Double, y: Double): Unit = js.native
 
 @js.native
 trait Element extends js.Object:

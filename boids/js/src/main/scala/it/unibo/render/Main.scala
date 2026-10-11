@@ -55,19 +55,26 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
         .loop()
         .unsafeRunCancelable()
     background(255)
-    colorMode(HSB)
     drawDensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
-    if (showBoids.checked())
-      environment.all.foreach(boid =>
-        val delta = boidHeight / 2
-        val (x, y) = (boid.position.x, boid.position.y)
-        val angle = math.atan2(boid.velocity.y, boid.velocity.x)
-        push()
-        translate(x, y)
-        rotate(angle + HALF_PI)
-        triangle(0, 0 - boidHeight, 0 + delta, 0 + delta, 0 - delta, 0 + delta)
-        pop()
-      )
+    if (showBoids.checked()) drawBoids(environment.all)
+
+  /** Straight on the canvas with the corners computed here: five p5 calls per boid would dominate the frame. */
+  private def drawBoids(boids: Seq[Boid]): Unit =
+    val half = boidHeight / 2.0
+    drawingContext.fillStyle = "white"
+    drawingContext.strokeStyle = "black"
+    boids.foreach { boid =>
+      val forward = boid.velocity.normalize
+      val side = Vector2D(-forward.y, forward.x)
+      val base = boid.position - forward * half
+      val corners = Seq(boid.position + forward * boidHeight, base + side * half, base - side * half)
+      drawingContext.beginPath()
+      drawingContext.moveTo(corners.head.x, corners.head.y)
+      corners.tail.foreach(corner => drawingContext.lineTo(corner.x, corner.y))
+      drawingContext.closePath()
+      drawingContext.fill()
+      drawingContext.stroke()
+    }
 
   override def getCurrentConfig(): ConfigurationStore.Config = ConfigurationStore.Config.from(sliders(_).value)
 
@@ -107,14 +114,11 @@ def drawDensityMap(
     visionRange: Double,
     environment: Environment
 ): Unit =
-  val densityMap = DensityMap(boundingBox, precision, visionRange, environment)
-  push()
-  noStroke()
-  densityMap.foreach { (coord, density) =>
-    colorFromDensity(density)
-    rect(coord.x, coord.y, precision, precision)
+  DensityMap(boundingBox, precision, visionRange, environment).foreach { (coord, density) =>
+    drawingContext.fillStyle = colorFromDensity(density)
+    drawingContext.fillRect(coord.x, coord.y, precision, precision)
   }
-  pop()
 
-def colorFromDensity(density: Double): Unit =
-  fill(((1.0f - density) * 0.85f - 0.15f) * 360, 127, 255, 1)
+/** Straight on the canvas, as p5 calls cost more than the drawing; negative hues are clamped to red like p5 did. */
+def colorFromDensity(density: Double): String =
+  s"hsl(${(((1.0f - density) * 0.85f - 0.15f) * 360).max(0)}, 100%, 50%)"
