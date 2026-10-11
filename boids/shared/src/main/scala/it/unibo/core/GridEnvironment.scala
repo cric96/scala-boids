@@ -29,6 +29,7 @@ class GridEnvironment(boids: Seq[Boid], bounds: Rectangle2D, cellSize: Double = 
       .take(count)
       .toVector
 
+  def offset(from: Vector2D, to: Vector2D): Vector2D = bounds.offset(from, to)
   def all: Seq[Boid] = boids
   def replaceBoidsWith(boids: Seq[Boid]): Environment = GridEnvironment(boids, bounds, cellSize)
 

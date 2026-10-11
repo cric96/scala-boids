@@ -5,6 +5,8 @@ import it.unibo.boundary.{ConfigurationStore, Settings}
 import it.unibo.core.geometry.Vector2D
 import it.unibo.core.{Boid, GridEnvironment}
 
+import cats.syntax.all.*
+
 import scala.util.Random
 
 class FlockingSuite extends munit.CatsEffectSuite:
@@ -29,18 +31,27 @@ class FlockingSuite extends munit.CatsEffectSuite:
         .foreach((before, after) => assertEquals(after.position, screen.wrap(before.position + after.velocity)))
     )
 
-  test("boids crossing a side of the screen enter from the opposite one"):
+  test("flocking steers the same wherever the flock is on the torus"):
+    val halfway = screen.center - screen.bottomLeft
+    val shifted =
+      GridEnvironment(start.all.map(boid => boid.copy(position = screen.wrap(boid.position + halfway))), screen)
+    for {
+      world <- dynamics(start)
+      shiftedWorld <- dynamics(shifted)
+    } yield world.all.zip(shiftedWorld.all).foreach { (boid, shiftedBoid) =>
+      assertEqualsDouble(shiftedBoid.velocity.x, boid.velocity.x, tolerance)
+      assertEqualsDouble(shiftedBoid.velocity.y, boid.velocity.y, tolerance)
+    }
+
+  test("a boid crossing a side of the screen enters from the opposite one"):
     val outwards = Seq(Vector2D(-1, 0), Vector2D(1, 0), Vector2D(0, -1), Vector2D(0, 1))
-    val crossing = outwards.map(side =>
-      val middleOfSide = screen.center + Vector2D(side.x * screen.width, side.y * screen.height) / 2
-      Boid(middleOfSide, side * Settings.constants.maxSpeed)
-    )
-    dynamics(GridEnvironment(crossing, screen)).map(world =>
-      outwards.zip(crossing).zip(world.all).foreach { case ((side, before), after) =>
-        val acrossTheScreen = Vector2D(side.x * screen.width, side.y * screen.height)
-        assertEquals(after.position, before.position + before.velocity - acrossTheScreen)
-      }
-    )
+    outwards.traverse_ { side =>
+      val acrossTheScreen = Vector2D(side.x * screen.width, side.y * screen.height)
+      val boid = Boid(screen.center + acrossTheScreen / 2, side * Settings.constants.maxSpeed)
+      dynamics(GridEnvironment(Seq(boid), screen)).map(world =>
+        assertEquals(world.all.map(_.position), Seq(boid.position + boid.velocity - acrossTheScreen))
+      )
+    }
 
   test("no boid is faster than the speed cap"):
     dynamics(start).map(
