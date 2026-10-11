@@ -29,7 +29,7 @@ sbt "boids/runMain it.unibo.FlockingRendering"
 
 ### 2. Headless Simulation & JSON Export
 ```bash
-sbt "boids/runMain it.unibo.core.main --boids 500 --separation 1.5 --align 1.0 --cohesion 1.0 --separationRange 20 --vision 50 --width 800 --height 600 --seeds 5"
+sbt "boids/runMain it.unibo.core.main --boids 500 --separation 1.5 --align 1.0 --cohesion 1.0 --separation-range 20 --vision 50 --width 800 --height 600 --seeds 5"
 ```
 
 ### 3. Reproduce from Exported JSON
