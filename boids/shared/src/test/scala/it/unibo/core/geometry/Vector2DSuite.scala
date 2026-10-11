@@ -8,3 +8,6 @@ class Vector2DSuite extends munit.CatsEffectSuite:
 
   test("limit leaves shorter vectors untouched"):
     assertEquals(Vector2D(0.3, 0.4).limit(1), Vector2D(0.3, 0.4))
+
+  test("normalizing the zero vector gives the zero vector"):
+    assertEquals(zero.normalize, zero)

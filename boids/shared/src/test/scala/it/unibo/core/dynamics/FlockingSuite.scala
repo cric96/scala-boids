@@ -4,7 +4,7 @@ import cats.effect.IO
 import it.unibo.boundary.ConfigurationStore
 import it.unibo.core.geometry.Vector2D.Vector2D
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
-import it.unibo.core.{Environment, Environments}
+import it.unibo.core.{Boid, Environment, Environments, UnboundedRTreeEnvironment}
 
 import scala.util.Random
 
@@ -23,6 +23,13 @@ class FlockingSuite extends munit.CatsEffectSuite:
   test("a step moves every boid by its new velocity exactly once"):
     dynamics(start).map(world =>
       start.all.zip(world.all).foreach((before, after) => assertClose(after.position, before.position + after.velocity))
+    )
+
+  test("overlapping boids do not produce NaN"):
+    val position = Vector2D(100, 100)
+    val overlapping = UnboundedRTreeEnvironment(Seq(Boid(position, Vector2D(1, 0)), Boid(position, Vector2D(0, 1))))
+    dynamics(overlapping).map(world =>
+      world.all.foreach(boid => assert(!(boid.position.norm + boid.velocity.norm).isNaN, boid))
     )
 
   test("three steps match the recorded snapshot"):

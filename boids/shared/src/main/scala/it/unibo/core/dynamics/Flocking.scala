@@ -39,6 +39,7 @@ class Flocking(
       other <- neighborhood
       position = other.position
       distance = center.position.distance(position)
+      if distance > 0
       difference = center.position - position
       normalize = difference.normalize * maxSpeed
     } yield normalize / distance
