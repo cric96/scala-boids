@@ -8,7 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "p5": "^1.11.13"
+    "p5": "^2.3.4"
   },
   "devDependencies": {
     "@scala-js/vite-plugin-scalajs": "^1.1.0",
