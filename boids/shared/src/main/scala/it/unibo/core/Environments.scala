@@ -13,4 +13,5 @@ object Environments:
     val boids = Boid
       .generator(Vector2D.randomPositionIn(generatorBox), Vector2D.randomUnitary)
       .take(boidsCount)
+      .toVector
     UnboundedRTreeEnvironment(boids)

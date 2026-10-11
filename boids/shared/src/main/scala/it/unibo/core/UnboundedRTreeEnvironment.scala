@@ -6,7 +6,7 @@ import it.unibo.core.geometry.Vector2D.Vector2D
 
 class UnboundedRTreeEnvironment(boids: Seq[Boid]) extends Environment:
   given Conversion[Double, Float] = _.toFloat
-  private val spatialIndex: RTree[Boid] =
+  private lazy val spatialIndex: RTree[Boid] =
     RTree(boids.map(boid => entry(boid.position.x, boid.position.y, boid)))
   def nearTo(center: Boid, range: Double): Seq[Boid] =
     val centerPosition = center.position
