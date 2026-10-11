@@ -1,29 +1,27 @@
 package it.unibo
+import it.unibo.boundary.Parameter
+import p5.Element
 import p5.api.*
 
-import scala.scalajs.js
-class Slider(
-    name: String,
-    minBound: Double,
-    maxBound: Double,
-    initialValue: Double,
-    position: (Double, Double),
-    ticks: Boolean = true
-):
+/** A labelled range input bound to a [[Parameter]], showing its live value and the filled part of the track. */
+class Slider(parameter: Parameter, container: Element):
+  private val row = createDiv().addClass("control").parent(container)
+  private val header = createDiv().addClass("control-header").parent(row)
+  createSpan(parameter.label).parent(header)
+  private val output = createSpan().addClass("control-value").parent(header)
   private val slider =
-    if (ticks)
-      createSlider(minBound, maxBound, initialValue, (maxBound - minBound) / 100)
-    else
-      createSlider(minBound, maxBound, initialValue)
-  private val size = 150
-  private val textSizeFont = 15
-  slider.position(position._1, position._2)
-  def render(): Unit =
-    push()
-    textSize(textSizeFont);
-    fill(255)
-    text(s"$name : ${slider.value()}", position._1 + size, position._2 + textSizeFont);
-    pop()
+    createSlider(parameter.min, parameter.max, parameter.default, parameter.step).parent(row)
+  slider.input(_ => refresh())
+  refresh()
+
   def value: Double = slider.value() match
     case s: String => s.toDouble
     case other: Double => other
+
+  def reset(): Unit =
+    slider.value(parameter.default)
+    refresh()
+
+  private def refresh(): Unit =
+    output.html(parameter.format(value))
+    slider.elt.style.setProperty("--fill", s"${(value - parameter.min) / (parameter.max - parameter.min) * 100}%")

@@ -1,12 +1,13 @@
 package it.unibo.render
 
 import it.unibo.Slider
-import it.unibo.boundary.{ConfigurationStore, Renderer}
+import it.unibo.boundary.{ConfigurationStore, Parameter, Renderer}
+import it.unibo.boundary.Parameter.*
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.{Boid, DensityEvaluation, DensityMap, Dynamics, Environment, Environments, BoundedRTreeEnvironment}
 import it.unibo.core.dynamics.{BorderForce, DynamicFactory, Flocking, LinearVelocity}
 import it.unibo.core.simulation.Simulation
-import it.unibo.p5.{P5, P5Logic}
+import it.unibo.p5.{Element, P5, P5Logic}
 import it.unibo.p5.api.*
 import cats.effect.unsafe.implicits.global
 
@@ -21,12 +22,12 @@ import scala.math.atan
 import java.net.URL
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
   // InitialValues
-  var boidsCount = 500
+  var boidsCount = BoidsCount.default.toInt
   var boidHeight = 10
   var environment: Environment = _
   var cancelSimulation: () => Future[Unit] = _
-  var sliders: Map[String, Slider] = Map.empty
-  var showBoids = false
+  var sliders: Map[Parameter, Slider] = Map.empty
+  var showBoids: Element = _
   // Context
   given Random = Random(0)
 
@@ -34,21 +35,20 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     // gui setup
     val canvas = createCanvas(windowWidth, windowHeight)
     val bounds = boundingBox
-    sliders = createSliders()
+    val (panelSliders, boidsSwitch) = createControlPanel()
+    sliders = panelSliders
+    showBoids = boidsSwitch
     environment = Environments.setupBoids(bounds, boidsCount)
     cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(bounds), 33 millisecond)
       .loop()
       .unsafeRunCancelable()
 
-    val hideBoids = createButton("show boids");
-    hideBoids.position(10, 10);
-    hideBoids.mousePressed(_ => showBoids = !showBoids)
     canvas.style("display", "block")
     noLoop()
 
   override def draw(): Unit =
-    if (sliders("boidsCount").value.toInt != boidsCount)
-      boidsCount = sliders("boidsCount").value.toInt
+    if (sliders(BoidsCount).value.toInt != boidsCount)
+      boidsCount = sliders(BoidsCount).value.toInt
       cancelSimulation()
       environment = Environments.setupBoids(boundingBox, boidsCount)
       cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(boundingBox), 33 millisecond)
@@ -56,9 +56,8 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
         .unsafeRunCancelable()
     background(255)
     colorMode(HSB)
-    drawDensityMap(boundingBox, sliders("bucketSize").value, sliders("bucketRange").value, environment)
-    sliders.values.foreach(_.render())
-    if (showBoids)
+    drawDensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
+    if (showBoids.checked())
       environment.all.foreach(boid =>
         val delta = boidHeight / 2
         val (x, y) = (boid.position.x, boid.position.y)
@@ -70,14 +69,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
         pop()
       )
 
-  override def getCurrentConfig(): ConfigurationStore.Config =
-    val flocks = Flocking.Weight(sliders("separation").value, sliders("align").value, sliders("cohesion").value)
-    ConfigurationStore.Config(
-      flocks,
-      sliders("visionRange").value,
-      sliders("separationRange").value,
-      sliders("force").value
-    )
+  override def getCurrentConfig(): ConfigurationStore.Config = ConfigurationStore.Config.from(sliders(_).value)
 
   override def render(environment: Environment): Unit =
     this.environment = environment
@@ -86,18 +78,28 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
 
 def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, height))
 
-def createSliders(): Map[String, Slider] =
-  Map(
-    "separation" -> Slider("separation", 0, 3, 2, (10, 30)),
-    "align" -> Slider("align", 0, 3, 1, (10, 50)),
-    "cohesion" -> Slider("cohesion", 0, 3, 1, (10, 70)),
-    "visionRange" -> Slider("visionRange", 20, 200, 50, (10, 90)),
-    "separationRange" -> Slider("separationRange", 5, 100, 10, (10, 110)),
-    "bucketSize" -> Slider("bucketDefinition", 10, 40, 20, (10, 130), false),
-    "bucketRange" -> Slider("bucketRange", 20, 200, 100, (10, 150)),
-    "boidsCount" -> Slider("boids", 100, 1000, 400, (10, 170), false),
-    "force" -> Slider("maxForce", 0.01, 0.1, 0.03, (10, 190))
-  )
+/** Builds the floating control panel, returning its sliders and the "show boids" switch. */
+def createControlPanel(): (Map[Parameter, Slider], Element) =
+  val panel = createDiv().addClass("panel")
+  val header = createDiv("<h1>Boids</h1>").addClass("panel-header").parent(panel)
+  createButton(chevron)
+    .addClass("collapse")
+    .attribute("aria-label", "Toggle controls")
+    .parent(header)
+    .mousePressed(_ => panel.toggleClass("collapsed"))
+  val content = createDiv().parent(createDiv().addClass("panel-body").parent(panel))
+  val sliders = Parameter.sections.flatMap { (section, parameters) =>
+    val group = createDiv(s"<h2>$section</h2>").addClass("section").parent(content)
+    parameters.map(parameter => parameter -> Slider(parameter, group))
+  }.toMap
+  val footer = createDiv().addClass("panel-footer").parent(content)
+  val showBoids = createCheckbox("Show boids").addClass("switch").parent(footer)
+  createButton("Reset").parent(footer).mousePressed(_ => sliders.values.foreach(_.reset()))
+  (sliders, showBoids)
+
+private val chevron =
+  """<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">""" +
+    """<path d="M4 10l4-4 4 4"/></svg>"""
 
 def drawDensityMap(
     boundingBox: Rectangle2D,
