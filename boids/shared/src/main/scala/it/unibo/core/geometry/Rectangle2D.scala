@@ -7,22 +7,11 @@ case class Rectangle2D(bottomLeft: Vector2D, topRight: Vector2D):
   def contains(point: Vector2D): Boolean =
     point.x > bottomLeft.x && point.x < topRight.x && point.y > bottomLeft.y && point.y < topRight.y
   lazy val center: Vector2D = Vector2D(bottomLeft.x + width / 2, bottomLeft.y + height / 2)
+
+  /** The point brought inside as on a torus: leaving from one side enters from the opposite one. */
+  def wrap(point: Vector2D): Vector2D =
+    Vector2D(Rectangle2D.wrap(point.x, bottomLeft.x, width), Rectangle2D.wrap(point.y, bottomLeft.y, height))
 object Rectangle2D:
-  def wrapCornerRectanglePosition(rectangle2D: Rectangle2D, position: Vector2D): Vector2D =
-    val x =
-      if (rectangle2D.bottomLeft.x > position.x)
-        rectangle2D.topRight.x
-      else if (rectangle2D.topRight.x < position.x)
-        rectangle2D.bottomLeft.x
-      else
-        position.x
-
-    val y =
-      if (rectangle2D.bottomLeft.y > position.y)
-        rectangle2D.topRight.y
-      else if (rectangle2D.topRight.y < position.y)
-        rectangle2D.bottomLeft.y
-      else
-        position.y
-
-    Vector2D(x, y)
+  private def wrap(value: Double, start: Double, size: Double): Double =
+    val offset = (value - start) % size
+    start + (if (offset < 0) offset + size else offset)
