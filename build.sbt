@@ -21,6 +21,10 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule))
   )
   .jvmSettings(
+    // in-process, sbt exits as soon as main returns, closing the Swing window with it
+    run / fork := true,
+    run / baseDirectory := (ThisBuild / baseDirectory).value,
+    run / outputStrategy := Some(StdoutOutput),
     libraryDependencies ++= Seq(
       "org.rogach" %% "scallop" % "6.0.1",
       "com.lihaoyi" %% "os-lib" % "0.11.8",
