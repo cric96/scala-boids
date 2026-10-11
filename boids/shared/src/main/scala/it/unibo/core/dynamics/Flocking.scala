@@ -16,16 +16,17 @@ class Flocking(
   private val actuator = LinearVelocity()
   override def apply(environment: Environment): IO[Environment] =
     environment.all
-      .parTraverse(center =>
-        IO(
-          applyFlockingFactor(
-            center,
-            environment.nearTo(center, visionRange),
-            environment.nearTo(center, separationRange)
-          )
-        )
-      )
-      .flatMap(evaluation => actuator(environment.replaceBoidsWith(evaluation)))
+      .grouped(chunkSize(environment.all.size))
+      .toVector
+      .parTraverse(chunk => IO(chunk.map(steer(environment))))
+      .flatMap(evaluation => actuator(environment.replaceBoidsWith(evaluation.flatten)))
+
+  /** One chunk per core: a fiber per boid costs more than the boid itself (and Scala.js has a single core). */
+  private def chunkSize(boids: Int): Int =
+    math.ceil(boids.toDouble / Runtime.getRuntime.availableProcessors).toInt.max(1)
+
+  private def steer(environment: Environment)(center: Boid): Boid =
+    applyFlockingFactor(center, environment.nearTo(center, visionRange), environment.nearTo(center, separationRange))
 
   private def applyFlockingFactor(center: Boid, neighborhood: Seq[Boid], separationNeighborhood: Seq[Boid]): Boid =
     val separationForce = separation(center, separationNeighborhood) * maxForce
