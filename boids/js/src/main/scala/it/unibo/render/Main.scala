@@ -8,15 +8,15 @@ import it.unibo.core.dynamics.{BorderForce, DynamicFactory, Flocking, LinearVelo
 import it.unibo.core.simulation.Simulation
 import it.unibo.p5.{P5, P5Logic}
 import it.unibo.p5.api.*
-import monix.execution.Cancelable
+import cats.effect.unsafe.implicits.global
 
 import concurrent.duration.DurationInt
+import scala.concurrent.Future
 import scala.language.postfixOps
 import scala.scalajs.js.annotation.{JSExportTopLevel, JSGlobal, JSGlobalScope, JSName}
 import scala.util.Random
 import scalajs.js
 import scala.math.atan
-import monix.execution.Scheduler.Implicits.global
 import org.scalajs.dom
 
 import java.net.URL
@@ -27,7 +27,7 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
   var boidsCount = 500
   var boidHeight = 10
   var environment: Environment = _
-  var simulation: Cancelable = _
+  var cancelSimulation: () => Future[Unit] = _
   var sliders: Map[String, Slider] = Map.empty
   var showBoids = false
   // Context
@@ -39,9 +39,9 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     val bounds = boundingBox
     sliders = createSliders()
     environment = Environments.setupBoids(bounds, boidsCount)
-    simulation = Simulation(this, environment, this, DynamicFactory.flocking(bounds), 33 millisecond)
+    cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(bounds), 33 millisecond)
       .loop()
-      .runAsync { _ => }
+      .unsafeRunCancelable()
 
     val hideBoids = createButton("show boids");
     hideBoids.position(10, 10);
@@ -52,11 +52,11 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
   override def draw(): Unit =
     if (sliders("boidsCount").value.toInt != boidsCount)
       boidsCount = sliders("boidsCount").value.toInt
-      simulation.cancel()
+      cancelSimulation()
       environment = Environments.setupBoids(boundingBox, boidsCount)
-      simulation = Simulation(this, environment, this, DynamicFactory.flocking(boundingBox), 33 millisecond)
+      cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(boundingBox), 33 millisecond)
         .loop()
-        .runAsync { _ => }
+        .unsafeRunCancelable()
     background(255)
     colorMode(HSB)
     drawDensityMap(boundingBox, sliders("bucketSize").value, sliders("bucketRange").value, environment)

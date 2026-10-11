@@ -6,12 +6,9 @@ import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.simulation.Simulation
 import org.rogach.scallop.*
 import it.unibo.core.dynamics.DynamicFactory
-import monix.eval.Task
-import monix.execution.Cancelable
-import monix.execution.Scheduler.Implicits.global
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import it.unibo.render.SwingRender
-import monix.catnap.Semaphore
-import monix.execution.BufferCapacity.Unbounded
 import it.unibo.core.geometry.Vector2D.Vector2D
 import concurrent.duration.DurationInt
 import scala.collection.mutable
@@ -74,12 +71,7 @@ class SingleStore(config: Configuration) extends ConfigurationStore:
     }
     .map { case (render, simulation) => simulation.loopFor(steps()).map(_ => render.close()) }
 
-  val allSimulations = for {
-    semaphore <- Semaphore[Task](provisioned = Runtime.getRuntime.availableProcessors())
-    _ <- Task.parSequence(simulations.map(semaphore.withPermit))
-  } yield ()
-
-  allSimulations.runSyncUnsafe()
+  IO.parSequenceN(Runtime.getRuntime.availableProcessors())(simulations.toList).void.unsafeRunSync()
 @main def reproduce(path: String): Unit =
   val file = os.pwd / os.RelPath(path)
   val data = read[Seq[(Int, Seq[Boid])]](os.read(file))
@@ -93,4 +85,4 @@ class SingleStore(config: Configuration) extends ConfigurationStore:
     render,
     _ => dynamics,
     16 milliseconds
-  ).loop().runAsync(_ => ())
+  ).loop().unsafeRunAndForget()

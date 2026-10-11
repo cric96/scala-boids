@@ -3,9 +3,8 @@ package it.unibo.core.simulation
 import it.unibo.core.{Boid, Dynamics, Environment}
 import it.unibo.boundary.{ConfigurationStore, Renderer}
 import it.unibo.core.dynamics.Flocking
-import monix.eval.Task
+import cats.effect.IO
 
-import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.language.postfixOps
 
@@ -18,14 +17,14 @@ case class Simulation(
     dynamicsFactory: ConfigurationStore.Config => Dynamics,
     deltaTime: FiniteDuration = 0 milliseconds
 ):
-  def loop(): Task[Unit] = for {
+  def loop(): IO[Unit] = for {
     newWorld <- this.step()
     _ <-
-      if (deltaTime > (0 milliseconds)) { Task.sleep(deltaTime) }
-      else { Task {} }
+      if (deltaTime > (0 milliseconds)) { IO.sleep(deltaTime) }
+      else { IO.unit }
     _ <- this.copy(environment = newWorld).loop()
   } yield ()
-  private def step(): Task[Environment] = Task
+  private def step(): IO[Environment] = IO
     .defer {
       val flockConfig = store.getCurrentConfig()
       val flockingBehaviour = dynamicsFactory(flockConfig)
@@ -35,9 +34,9 @@ case class Simulation(
       render.render(newWorld)
       newWorld
     )
-  def loopFor(steps: Int): Task[Unit] =
+  def loopFor(steps: Int): IO[Unit] =
     if (steps == 0) {
-      Task {}
+      IO.unit
     } else {
       this.step().flatMap(newEnv => this.copy(environment = newEnv).loopFor(steps - 1))
     }

@@ -6,27 +6,27 @@ import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.simulation.Simulation
 import it.unibo.core.dynamics.{BorderForce, DynamicFactory, Flocking}
 import it.unibo.render.SwingRender
-import monix.execution.Cancelable
+import cats.effect.unsafe.implicits.global
 
 import concurrent.duration.DurationInt
 import scala.language.postfixOps
+import scala.concurrent.Future
 import scala.util.Random
-import monix.execution.Scheduler.Implicits.global
 
 import javax.swing.SwingUtilities
 
 object FlockingRendering extends App:
   given Random = Random(0)
-  var simulation: Cancelable = _
+  var cancelSimulation: () => Future[Unit] = _
   var lastCount = 1000
   val render = SwingRender()
   render.boidsCountStrategy = boidsCount =>
     if (boidsCount != lastCount) {
-      simulation.cancel()
+      cancelSimulation()
       lastCount = boidsCount
-      simulation = createSimulation
+      cancelSimulation = createSimulation
     }
-  SwingUtilities.invokeLater(() => simulation = createSimulation)
+  SwingUtilities.invokeLater(() => cancelSimulation = createSimulation)
 
   def createSimulation = Simulation(
     render,
@@ -34,4 +34,4 @@ object FlockingRendering extends App:
     render,
     DynamicFactory.flocking(render.bounds),
     16 milliseconds
-  ).loop().runAsync(_ => ())
+  ).loop().unsafeRunCancelable()

@@ -3,9 +3,9 @@ package it.unibo.core.dynamics
 import it.unibo.core.dynamics.Flocking.Weight
 import it.unibo.core.geometry.Vector2D.{Vector2D, zero}
 import it.unibo.core.{Boid, Dynamics, Environment}
-import monix.eval.Task
+import cats.effect.IO
+import cats.syntax.all.*
 import monocle.syntax.all.*
-import monix.execution.Scheduler.Implicits.global
 class Flocking(
     weights: Weight,
     visionRange: Double,
@@ -14,16 +14,18 @@ class Flocking(
     maxSpeed: Double = 2
 ) extends Dynamics:
   private val actuator = LinearVelocity()
-  override def apply(environment: Environment): Task[Environment] =
-    val centers = environment.all
-      .map(center =>
-        Task(center, environment.nearTo(center, visionRange), environment.nearTo(center, separationRange))
-          .map((center, neighborhood, separationNeighborhood) =>
-            applyFlockingFactor(center, neighborhood, separationNeighborhood)
+  override def apply(environment: Environment): IO[Environment] =
+    environment.all
+      .parTraverse(center =>
+        IO(
+          applyFlockingFactor(
+            center,
+            environment.nearTo(center, visionRange),
+            environment.nearTo(center, separationRange)
           )
+        )
       )
-
-    Task.parSequence(centers).flatMap(evaluation => actuator(environment.replaceBoidsWith(evaluation)))
+      .flatMap(evaluation => actuator(environment.replaceBoidsWith(evaluation)))
 
   private def applyFlockingFactor(center: Boid, neighborhood: Seq[Boid], separationNeighborhood: Seq[Boid]): Boid =
     val separationForce = separation(center, separationNeighborhood) * maxForce

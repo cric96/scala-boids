@@ -9,11 +9,11 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
     name := "scala-boids",
     libraryDependencies ++= Seq(
       "com.github.plokhotnyuk.rtree2d" %%% "rtree2d-core" % "0.11.15",
-      "io.monix" %%% "monix" % "3.4.0",
+      "org.typelevel" %%% "cats-effect" % "3.7.1",
       "dev.optics" %%% "monocle-core" % "3.3.0",
       "dev.optics" %%% "monocle-macro" % "3.3.0",
       "com.lihaoyi" %%% "upickle" % "4.4.3",
-      "org.scalameta" %%% "munit" % "1.3.6" % Test
+      "org.typelevel" %%% "munit-cats-effect" % "2.2.1" % Test
     )
   )
   .jsConfigure(p => p.enablePlugins(ScalablyTypedConverterGenSourcePlugin))
