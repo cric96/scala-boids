@@ -3,7 +3,7 @@ package it.unibo.core.dynamics
 import it.unibo.Fixtures.{population, screen, tolerance}
 import it.unibo.boundary.ConfigurationStore
 import it.unibo.core.geometry.Vector2D
-import it.unibo.core.{Boid, UnboundedRTreeEnvironment}
+import it.unibo.core.{Boid, GridEnvironment}
 
 import scala.util.Random
 
@@ -11,7 +11,7 @@ class FlockingSuite extends munit.CatsEffectSuite:
   private given random: Random = Random(0)
   private val dynamics = DynamicFactory.flocking(screen)(ConfigurationStore.Config.from(_.default))
   // up to twice the cap, so that the steering has to slow some boids down
-  private val start = UnboundedRTreeEnvironment(
+  private val start = GridEnvironment(
     Boid
       .generator(
         Vector2D.randomPositionIn(screen),
@@ -33,7 +33,7 @@ class FlockingSuite extends munit.CatsEffectSuite:
 
   test("boids sharing the same position stay finite"):
     val overlapping =
-      UnboundedRTreeEnvironment(
+      GridEnvironment(
         Boid.generator(screen.center, Vector2D.randomUnitary).take(Flocking.Neighbours).toVector
       )
     dynamics(overlapping).map(

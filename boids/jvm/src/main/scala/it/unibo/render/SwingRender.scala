@@ -2,7 +2,7 @@ package it.unibo.render
 
 import it.unibo.boundary.{ConfigurationStore, Renderer}
 import it.unibo.boundary.Parameter.*
-import it.unibo.core.{DensityEvaluation, DensityMap, Environment}
+import it.unibo.core.{DensityMap, Environment}
 import it.unibo.core.dynamics.Flocking
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 

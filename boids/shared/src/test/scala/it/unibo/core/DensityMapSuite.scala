@@ -12,7 +12,7 @@ class DensityMapSuite extends munit.CatsEffectSuite:
   // snapped to whole cells, where counting by cells is exact
   private val range = 2 * precision * (Parameter.BucketRange.default / (2 * precision)).round
   private val boids = Boid.generator(Vector2D.randomPositionIn(screen), Vector2D.zero).take(population).toVector
-  private val densityMap = DensityMap(screen, precision, range, UnboundedRTreeEnvironment(boids))
+  private val densityMap = DensityMap(screen, precision, range, GridEnvironment(boids))
 
   private def corners(from: Double, to: Double): Seq[Double] =
     LazyList.iterate(from)(_ + precision).takeWhile(_ < to)
@@ -34,5 +34,5 @@ class DensityMapSuite extends munit.CatsEffectSuite:
     assertEquals(densityMap, counts.map((corner, count) => corner -> count / densest))
 
   test("an empty environment has zero density everywhere"):
-    val densities = DensityMap(screen, precision, range, UnboundedRTreeEnvironment(Seq.empty)).map(_._2)
+    val densities = DensityMap(screen, precision, range, GridEnvironment(Seq.empty)).map(_._2)
     assertEquals(densities.toSet, Set(0.0))

@@ -8,7 +8,6 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "scala-boids",
     libraryDependencies ++= Seq(
-      "com.github.plokhotnyuk.rtree2d" %%% "rtree2d-core" % "0.11.15",
       "org.typelevel" %%% "cats-effect" % "3.7.1",
       "dev.optics" %%% "monocle-core" % "3.3.0",
       "dev.optics" %%% "monocle-macro" % "3.3.0",

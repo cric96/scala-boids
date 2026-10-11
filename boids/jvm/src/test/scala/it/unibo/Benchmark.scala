@@ -3,7 +3,6 @@ package it.unibo
 import cats.effect.unsafe.implicits.global
 import it.unibo.boundary.{ConfigurationStore, Parameter}
 import it.unibo.core.dynamics.DynamicFactory
-import it.unibo.core.geometry.Vector2D
 import it.unibo.core.{DensityMap, Environment, Environments}
 
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -26,10 +25,9 @@ import scala.util.Random
   val densities = Seq(Parameter.BucketSize.default, Parameter.BucketSize.min).map(cell =>
     cell -> millisPer(densityRepetitions)(DensityMap(bounds, cell, Parameter.BucketRange.default, warm))
   )
-  val reach = Vector2D(Parameter.VisionRange.default, Parameter.VisionRange.default)
-  // boids in the vision window of each boid, before flocking caps them to its nearest ones
+  // boids within the vision range of each boid, before flocking caps them
   val neighbours =
-    warm.all.map(boid => warm.getAllIn(boid.position - reach, boid.position + reach).size - 1).sum / boids
+    warm.all.map(warm.nearTo(_, Parameter.VisionRange.default, boids).size).sum / boids
   println(
     f"boids=$boids%5d  neighbours=$neighbours%4d  step=$step%7.2f ms  " +
       densities.map((cell, ms) => f"density@$cell%.0f=$ms%7.2f ms").mkString("  ")

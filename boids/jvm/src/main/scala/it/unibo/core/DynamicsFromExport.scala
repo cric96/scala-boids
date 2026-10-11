@@ -9,4 +9,4 @@ class DynamicsFromExport(val data: Seq[(Int, Seq[Boid])]) extends Dynamics:
     }
     val current = localData.head
     localData = localData.tail
-    IO(UnboundedRTreeEnvironment(current._2))
+    IO(GridEnvironment(current._2))

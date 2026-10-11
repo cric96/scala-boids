@@ -14,4 +14,4 @@ object Environments:
       .generator(Vector2D.randomPositionIn(generatorBox), Vector2D.randomUnitary)
       .take(boidsCount)
       .toVector
-    UnboundedRTreeEnvironment(boids)
+    GridEnvironment(boids)
