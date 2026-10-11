@@ -1,49 +1,44 @@
-name: Game deploy
+name: CI
 
 on:
-    push:
-    workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
-  Build:
-    strategy:
-      # Using matrix build even if not needed
-      matrix:
-        os: [ ubuntu-latest ]
-        jvm_version: [ 17 ]
-    runs-on: ${{ matrix.os }}
-    env:
-      JAVA_VERSION: ${{ matrix.jvm_version }}
-      OS: ${{ matrix.os }}
-      TERM: dumb
+  build:
+    runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: recursive
-      - name: Fetch tags
-        shell: bash
-        run: git fetch --tags -f
-      - name: Setup Java ${{ matrix.jvm_version }}
-        uses: actions/setup-java@v4
+        uses: actions/checkout@v7
+      - name: Setup Java
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: ${{ matrix.jvm_version }}
+          java-version: 25
           cache: sbt
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
-          node-version: 16
-      - name: Build project
-        run:  sbt -v "fastOptJS::webpack"
-      - name: Adjust folders for deployment
-        shell: bash
-        run: .github/scripts/adjust-deploy.sh
+          node-version: 24
+          cache: npm
+          cache-dependency-path: boids/js/package-lock.json
+      - name: Check formatting and run tests
+        run: sbt scalafmtCheckAll scalafmtSbtCheck test
+      - name: Build web app
+        working-directory: boids/js
+        run: |
+          npm ci
+          npm run build
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          publish_dir: ./public
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: boids/js/dist
