@@ -1,39 +1,41 @@
 package it.unibo.core.dynamics
 
-import cats.effect.IO
+import it.unibo.Fixtures.{population, screen, tolerance}
 import it.unibo.boundary.ConfigurationStore
-import it.unibo.core.geometry.Vector2D.Vector2D
-import it.unibo.core.geometry.{Rectangle2D, Vector2D}
-import it.unibo.core.{Boid, Environment, Environments, UnboundedRTreeEnvironment}
+import it.unibo.core.geometry.Vector2D
+import it.unibo.core.{Boid, UnboundedRTreeEnvironment}
 
 import scala.util.Random
 
 class FlockingSuite extends munit.CatsEffectSuite:
-  private val bounds = Rectangle2D(Vector2D(0, 0), Vector2D(200, 200))
-  private val dynamics = DynamicFactory.flocking(bounds)(ConfigurationStore.Config.from(_.default))
-  private val start = Environments.setupBoids(bounds, 50)(using Random(0))
-
-  private def run(steps: Int): IO[Environment] =
-    (1 to steps).foldLeft(IO.pure(start))((world, _) => world.flatMap(dynamics))
-
-  private def assertClose(actual: Vector2D, expected: Vector2D): Unit =
-    assertEqualsDouble(actual.x, expected.x, 1e-6)
-    assertEqualsDouble(actual.y, expected.y, 1e-6)
+  private given random: Random = Random(0)
+  private val dynamics = DynamicFactory.flocking(screen)(ConfigurationStore.Config.from(_.default))
+  // up to twice the cap, so that the steering has to slow some boids down
+  private val start = UnboundedRTreeEnvironment(
+    Boid
+      .generator(
+        Vector2D.randomPositionIn(screen),
+        Vector2D.randomUnitary * (random.nextDouble() * 2 * Flocking.MaxSpeed)
+      )
+      .take(population)
+      .toVector
+  )
 
   test("a step moves every boid by its new velocity exactly once"):
     dynamics(start).map(world =>
-      start.all.zip(world.all).foreach((before, after) => assertClose(after.position, before.position + after.velocity))
+      start.all
+        .zip(world.all)
+        .foreach((before, after) => assertEquals(after.position, before.position + after.velocity))
     )
 
-  test("overlapping boids do not produce NaN"):
-    val position = Vector2D(100, 100)
-    val overlapping = UnboundedRTreeEnvironment(Seq(Boid(position, Vector2D(1, 0)), Boid(position, Vector2D(0, 1))))
-    dynamics(overlapping).map(world =>
-      world.all.foreach(boid => assert(!(boid.position.norm + boid.velocity.norm).isNaN, boid))
-    )
+  test("no boid is faster than the speed cap"):
+    dynamics(start).map(_.all.foreach(boid => assert(boid.velocity.norm <= Flocking.MaxSpeed + tolerance, boid)))
 
-  test("three steps match the recorded snapshot"):
-    run(3).map { world =>
-      assertClose(world.all.map(_.position).reduce(_ + _), Vector2D(5043.669093112037, 5010.20362255883))
-      assertClose(world.all.map(_.velocity).reduce(_ + _), Vector2D(7.821967243478331, 3.186563233464365))
-    }
+  test("boids sharing the same position stay finite"):
+    val overlapping =
+      UnboundedRTreeEnvironment(
+        Boid.generator(screen.center, Vector2D.randomUnitary).take(Flocking.Neighbours).toVector
+      )
+    dynamics(overlapping).map(
+      _.all.foreach(boid => assert(boid.position.norm.isFinite && boid.velocity.norm.isFinite, boid))
+    )

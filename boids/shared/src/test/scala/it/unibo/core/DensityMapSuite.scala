@@ -1,24 +1,38 @@
 package it.unibo.core
 
-import it.unibo.core.geometry.{Rectangle2D, Vector2D}
+import it.unibo.Fixtures.{population, screen}
+import it.unibo.boundary.Parameter
+import it.unibo.core.geometry.Vector2D
 
 import scala.util.Random
 
 class DensityMapSuite extends munit.CatsEffectSuite:
-  private val bounds = Rectangle2D(Vector2D(0, 0), Vector2D(100, 80))
-  private val boids = Boid.generator(Vector2D.randomPositionIn(bounds)(using Random(0)), Vector2D.zero).take(300)
+  private given Random = Random(0)
+  private val precision = Parameter.BucketSize.default
+  // snapped to whole cells, where counting by cells is exact
+  private val range = 2 * precision * (Parameter.BucketRange.default / (2 * precision)).round
+  private val boids = Boid.generator(Vector2D.randomPositionIn(screen), Vector2D.zero).take(population).toVector
+  private val densityMap = DensityMap(screen, precision, range, UnboundedRTreeEnvironment(boids))
+
+  private def corners(from: Double, to: Double): Seq[Double] =
+    LazyList.iterate(from)(_ + precision).takeWhile(_ < to)
+
+  test("the map has a value for the corner of every cell"):
+    val expected = for {
+      x <- corners(screen.bottomLeft.x, screen.topRight.x)
+      y <- corners(screen.bottomLeft.y, screen.topRight.y)
+    } yield Vector2D(x, y)
+    assertEquals(densityMap.map(_._1).toSet, expected.toSet)
 
   test("each cell counts the boids in the window centered on its corner, relative to the densest cell"):
-    val (precision, range) = (10, 40.0)
-    val counts = for {
-      x <- 0 until 100 by precision
-      y <- 0 until 80 by precision
-    } yield Vector2D(x, y) -> boids.count(boid =>
-      (boid.position.x - x).abs < range / 2 && (boid.position.y - y).abs < range / 2
+    val counts = densityMap.map((corner, _) =>
+      corner -> boids.count(boid =>
+        (boid.position.x - corner.x).abs < range / 2 && (boid.position.y - corner.y).abs < range / 2
+      )
     )
-    val expected = counts.map((coord, count) => coord -> count.toDouble / counts.map(_._2).max).toMap
-    assertEquals(DensityMap(bounds, precision, range, UnboundedRTreeEnvironment(boids)).toMap, expected)
+    val densest = counts.map(_._2).max.toDouble
+    assertEquals(densityMap, counts.map((corner, count) => corner -> count / densest))
 
   test("an empty environment has zero density everywhere"):
-    val densities = DensityMap(bounds, 10, 40, UnboundedRTreeEnvironment(Seq.empty)).map(_._2)
+    val densities = DensityMap(screen, precision, range, UnboundedRTreeEnvironment(Seq.empty)).map(_._2)
     assertEquals(densities.toSet, Set(0.0))

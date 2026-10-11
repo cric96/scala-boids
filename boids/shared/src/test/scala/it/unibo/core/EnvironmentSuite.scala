@@ -1,21 +1,28 @@
 package it.unibo.core
 
+import it.unibo.Fixtures.{population, screen}
 import it.unibo.boundary.Parameter
 import it.unibo.core.dynamics.Flocking
-import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 
 import scala.util.Random
 
 class EnvironmentSuite extends munit.CatsEffectSuite:
-  private val bounds = Rectangle2D(Vector2D(0, 0), Vector2D(1000, 1000))
-  private val environment = Environments.setupBoids(bounds, Parameter.BoidsCount.default.toInt)(using Random(0))
+  private val environment = Environments.setupBoids(screen, population)(using Random(0))
+  private val range = Parameter.VisionRange.default
 
-  test("nearTo returns the count other boids closest to the center, closer than range"):
-    val range = Parameter.VisionRange.default
-    for {
-      count <- Seq(Flocking.Neighbours, environment.all.size)
-      center <- environment.all
-    } do
-      val distance = (other: Boid) => other.position.distance(center.position)
-      val expected = environment.all.filter(other => (other ne center) && distance(other) < range).sortBy(distance)
-      assertEquals(environment.nearTo(center, range, count).toSet, expected.take(count).toSet)
+  private def othersByDistance(center: Boid): Seq[Boid] =
+    val distance = (other: Boid) => other.position.distance(center.position)
+    environment.all.filter(other => (other ne center) && distance(other) < range).sortBy(distance)
+
+  test("nearTo returns every other boid closer than range when the count allows it"):
+    environment.all.foreach(center =>
+      assertEquals(environment.nearTo(center, range, population).toSet, othersByDistance(center).toSet)
+    )
+
+  test("nearTo returns only the count boids closest to the center"):
+    environment.all.foreach(center =>
+      assertEquals(
+        environment.nearTo(center, range, Flocking.Neighbours).toSet,
+        othersByDistance(center).take(Flocking.Neighbours).toSet
+      )
+    )

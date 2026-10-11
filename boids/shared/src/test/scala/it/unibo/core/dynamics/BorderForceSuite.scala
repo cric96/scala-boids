@@ -1,14 +1,30 @@
 package it.unibo.core.dynamics
 
+import it.unibo.Fixtures.{samples, screen}
 import it.unibo.core.Boid
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 
+import scala.util.Random
+
 class BorderForceSuite extends munit.CatsEffectSuite:
-  private val border = BorderForce(Rectangle2D(Vector2D(0, 0), Vector2D(1000, 1000)))
-  private val velocity = Vector2D(1, 0)
+  private given Random = Random(0)
+  private val border = BorderForce(screen)
+  private val margin = Vector2D(BorderForce.Margin, BorderForce.Margin)
+  private val inner = Rectangle2D(screen.bottomLeft + margin, screen.topRight - margin)
 
-  test("boids far from the walls keep their velocity"):
-    assertEquals(border.avoidWall(Boid(Vector2D(500, 300), velocity)).velocity, velocity)
+  test("boids farther than the margin from every wall keep their velocity"):
+    Boid
+      .generator(Vector2D.randomPositionIn(inner), Vector2D.randomUnitary)
+      .take(samples)
+      .foreach(boid => assertEquals(border.avoidWall(boid).velocity, boid.velocity))
 
-  test("boids close to a wall are pushed away from it"):
-    assert(border.avoidWall(Boid(Vector2D(500, 10), velocity)).velocity.y > 0)
+  test("boids at rest within the margin of a wall are pushed towards the inside"):
+    Iterator
+      .continually(Vector2D.randomPositionIn(screen))
+      .filterNot(inner.contains)
+      .take(samples)
+      .foreach { position =>
+        val push = border.avoidWall(Boid(position, Vector2D.zero)).velocity
+        val inwards = screen.center - position
+        assert(push.x * inwards.x + push.y * inwards.y > 0, position)
+      }

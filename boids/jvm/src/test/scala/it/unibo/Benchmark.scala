@@ -3,7 +3,7 @@ package it.unibo
 import cats.effect.unsafe.implicits.global
 import it.unibo.boundary.{ConfigurationStore, Parameter}
 import it.unibo.core.dynamics.DynamicFactory
-import it.unibo.core.geometry.{Rectangle2D, Vector2D}
+import it.unibo.core.geometry.Vector2D
 import it.unibo.core.{DensityMap, Environment, Environments}
 
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -12,7 +12,7 @@ import scala.util.Random
 
 /** Rough timings of the simulation hot paths: `sbt "boids/Test/runMain it.unibo.benchmark 2000 200"`. */
 @main def benchmark(boids: Int, steps: Int): Unit =
-  val bounds = Rectangle2D(Vector2D(0, 0), Vector2D(1920, 1080)) // a full-HD screen
+  val bounds = Fixtures.screen
   val densityRepetitions = 10
   val dynamics = DynamicFactory.flocking(bounds)(ConfigurationStore.Config.from(_.default))
   def run(environment: Environment): Environment =
