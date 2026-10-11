@@ -5,7 +5,7 @@ import it.unibo.boundary.{ConfigurationStore, Renderer}
 import it.unibo.core.dynamics.Flocking
 import cats.effect.IO
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.language.postfixOps
 
 import concurrent.duration.DurationInt
@@ -15,13 +15,12 @@ case class Simulation(
     environment: Environment,
     store: ConfigurationStore,
     dynamicsFactory: ConfigurationStore.Config => Dynamics,
-    deltaTime: FiniteDuration = 0 milliseconds
+    framePeriod: FiniteDuration = 0 milliseconds
 ):
+  /** Steps and renders forever, sleeping only what each step leaves of the frame period. */
   def loop(): IO[Unit] = for {
-    newWorld <- this.step()
-    _ <-
-      if (deltaTime > (0 milliseconds)) { IO.sleep(deltaTime) }
-      else { IO.unit }
+    (elapsed, newWorld) <- this.step().timed
+    _ <- IO.sleep((framePeriod - elapsed).max(Duration.Zero))
     _ <- this.copy(environment = newWorld).loop()
   } yield ()
   private def step(): IO[Environment] = IO
