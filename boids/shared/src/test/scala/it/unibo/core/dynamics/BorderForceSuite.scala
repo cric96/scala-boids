@@ -1,6 +1,7 @@
 package it.unibo.core.dynamics
 
 import it.unibo.Fixtures.{samples, screen}
+import it.unibo.boundary.Settings
 import it.unibo.core.Boid
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 
@@ -9,7 +10,7 @@ import scala.util.Random
 class BorderForceSuite extends munit.CatsEffectSuite:
   private given Random = Random(0)
   private val border = BorderForce(screen)
-  private val margin = Vector2D(BorderForce.Margin, BorderForce.Margin)
+  private val margin = Vector2D(Settings.constants.borderMargin, Settings.constants.borderMargin)
   private val inner = Rectangle2D(screen.bottomLeft + margin, screen.topRight - margin)
 
   test("boids farther than the margin from every wall keep their velocity"):

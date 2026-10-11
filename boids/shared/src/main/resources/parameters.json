@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "Separation": { "label": "Separation", "section": "Flocking", "min": 0, "max": 3, "default": 2, "step": 0.01 },
+    "Align": { "label": "Alignment", "section": "Flocking", "min": 0, "max": 3, "default": 1, "step": 0.01 },
+    "Cohesion": { "label": "Cohesion", "section": "Flocking", "min": 0, "max": 3, "default": 1, "step": 0.01 },
+    "MaxForce": { "label": "Max force", "section": "Flocking", "min": 0.01, "max": 0.1, "default": 0.03, "step": 0.001 },
+    "VisionRange": { "label": "Vision range", "section": "Perception", "min": 20, "max": 200, "default": 50, "step": 1 },
+    "SeparationRange": { "label": "Separation range", "section": "Perception", "min": 5, "max": 100, "default": 20, "step": 1 },
+    "BucketSize": { "label": "Cell size", "section": "Density map", "min": 5, "max": 40, "default": 20, "step": 1 },
+    "BucketRange": { "label": "Density radius", "section": "Density map", "min": 20, "max": 200, "default": 100, "step": 1 },
+    "BoidsCount": { "label": "Boids", "section": "Population", "min": 100, "max": 2000, "default": 500, "step": 10 }
+  },
+  "constants": {
+    "maxSpeed": 2,
+    "neighbours": 20,
+    "borderMargin": 50,
+    "borderStrength": 2
+  }
+}

@@ -1,7 +1,7 @@
 package it.unibo.core.dynamics
 
 import it.unibo.Fixtures.{population, screen, tolerance}
-import it.unibo.boundary.ConfigurationStore
+import it.unibo.boundary.{ConfigurationStore, Settings}
 import it.unibo.core.geometry.Vector2D
 import it.unibo.core.{Boid, GridEnvironment}
 
@@ -15,7 +15,7 @@ class FlockingSuite extends munit.CatsEffectSuite:
     Boid
       .generator(
         Vector2D.randomPositionIn(screen),
-        Vector2D.randomUnitary * (random.nextDouble() * 2 * Flocking.MaxSpeed)
+        Vector2D.randomUnitary * (random.nextDouble() * 2 * Settings.constants.maxSpeed)
       )
       .take(population)
       .toVector
@@ -29,12 +29,14 @@ class FlockingSuite extends munit.CatsEffectSuite:
     )
 
   test("no boid is faster than the speed cap"):
-    dynamics(start).map(_.all.foreach(boid => assert(boid.velocity.norm <= Flocking.MaxSpeed + tolerance, boid)))
+    dynamics(start).map(
+      _.all.foreach(boid => assert(boid.velocity.norm <= Settings.constants.maxSpeed + tolerance, boid))
+    )
 
   test("boids sharing the same position stay finite"):
     val overlapping =
       GridEnvironment(
-        Boid.generator(screen.center, Vector2D.randomUnitary).take(Flocking.Neighbours).toVector
+        Boid.generator(screen.center, Vector2D.randomUnitary).take(Settings.constants.neighbours).toVector
       )
     dynamics(overlapping).map(
       _.all.foreach(boid => assert(boid.position.norm.isFinite && boid.velocity.norm.isFinite, boid))

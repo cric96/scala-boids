@@ -13,7 +13,22 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
       "dev.optics" %%% "monocle-macro" % "3.3.0",
       "com.lihaoyi" %%% "upickle" % "4.4.3",
       "org.typelevel" %%% "munit-cats-effect" % "2.2.1" % Test
-    )
+    ),
+    // parameters.json is embedded at build time: the JVM, the browser and the tests all read the same file
+    Compile / sourceGenerators += Def.task {
+      val json = (ThisBuild / baseDirectory).value / "boids" / "shared" / "src" / "main" / "resources" / "parameters.json"
+      val generated = (Compile / sourceManaged).value / "it" / "unibo" / "boundary" / "ParametersJson.scala"
+      val quotes = "\"\"\""
+      val source = Seq(
+        "package it.unibo.boundary",
+        "",
+        "private[boundary] object ParametersJson:",
+        s"  val text: String = $quotes${IO.read(json)}$quotes",
+        ""
+      ).mkString("\n")
+      if (!generated.exists || IO.read(generated) != source) IO.write(generated, source)
+      Seq(generated)
+    }.taskValue
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,

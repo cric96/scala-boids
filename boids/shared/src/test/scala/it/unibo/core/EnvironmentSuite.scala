@@ -1,8 +1,7 @@
 package it.unibo.core
 
 import it.unibo.Fixtures.{population, screen}
-import it.unibo.boundary.Parameter
-import it.unibo.core.dynamics.Flocking
+import it.unibo.boundary.{Parameter, Settings}
 import it.unibo.core.geometry.Vector2D.Vector2D
 
 import scala.util.Random
@@ -30,8 +29,8 @@ class EnvironmentSuite extends munit.CatsEffectSuite:
       (_, grid) <- grids
       center <- boids
     } do
-      val neighbours = grid.nearTo(center, range, Flocking.Neighbours)
-      assertEquals(neighbours.size, othersInRange(center).size.min(Flocking.Neighbours))
+      val neighbours = grid.nearTo(center, range, Settings.constants.neighbours)
+      assertEquals(neighbours.size, othersInRange(center).size.min(Settings.constants.neighbours))
       assert(neighbours.toSet.subsetOf(othersInRange(center).toSet))
 
   test("nearTo prefers the boids in the cells nearest to the center"):
@@ -44,6 +43,6 @@ class EnvironmentSuite extends munit.CatsEffectSuite:
       def ring(other: Boid): Int =
         val ((x, y), (centerX, centerY)) = (cell(other.position), cell(center.position))
         (x - centerX).abs.max((y - centerY).abs)
-      val neighbours = grid.nearTo(center, range, Flocking.Neighbours)
+      val neighbours = grid.nearTo(center, range, Settings.constants.neighbours)
       val leftOut = othersInRange(center).filterNot(neighbours.contains)
       assert(neighbours.map(ring).maxOption.forall(farthest => leftOut.forall(ring(_) >= farthest)), center)
