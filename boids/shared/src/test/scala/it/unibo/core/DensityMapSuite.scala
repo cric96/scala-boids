@@ -24,10 +24,11 @@ class DensityMapSuite extends munit.CatsEffectSuite:
     } yield Vector2D(x, y)
     assertEquals(densityMap.map(_._1).toSet, expected.toSet)
 
-  test("each cell counts the boids in the window centered on its corner, relative to the densest cell"):
+  test("each cell counts the boids in the window centered on its corner on the torus, relative to the densest cell"):
     val counts = densityMap.map((corner, _) =>
       corner -> boids.count(boid =>
-        (boid.position.x - corner.x).abs < range / 2 && (boid.position.y - corner.y).abs < range / 2
+        val offset = screen.offset(corner, boid.position)
+        offset.x.abs < range / 2 && offset.y.abs < range / 2
       )
     )
     val densest = counts.map(_._2).max.toDouble
