@@ -22,7 +22,7 @@ import org.scalajs.dom
 import java.net.URL
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
   // Import part
-  typings.p5.p5Require
+  it.unibo.typings.p5.p5Require
   // InitialValues
   var boidsCount = 500
   var boidHeight = 10
