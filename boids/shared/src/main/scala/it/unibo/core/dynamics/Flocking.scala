@@ -1,5 +1,6 @@
 package it.unibo.core.dynamics
 
+import it.unibo.boundary.Parameter
 import it.unibo.core.dynamics.Flocking.Weight
 import it.unibo.core.geometry.Vector2D.{Vector2D, zero}
 import it.unibo.core.{Boid, Dynamics, Environment}
@@ -10,8 +11,8 @@ class Flocking(
     weights: Weight,
     visionRange: Double,
     separationRange: Double,
-    maxForce: Double = 0.03,
-    maxSpeed: Double = 2,
+    maxForce: Double = Parameter.MaxForce.default,
+    maxSpeed: Double = Flocking.MaxSpeed,
     neighbours: Int = Flocking.Neighbours
 ) extends Dynamics:
   override def apply(environment: Environment): IO[Environment] =
@@ -71,3 +72,6 @@ object Flocking:
 
   /** Like starlings, each boid follows only its nearest mates, which also bounds the work per boid in dense flocks. */
   val Neighbours: Int = 20
+
+  /** Speed cap of every boid, in pixels per step. */
+  val MaxSpeed: Double = 2

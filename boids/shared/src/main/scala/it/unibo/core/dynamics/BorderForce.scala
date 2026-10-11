@@ -6,7 +6,11 @@ import cats.effect.IO
 import monocle.syntax.all._
 
 /** Pushes boids away from the walls closer than `margin`: further away the flock steers on its own. */
-class BorderForce(bound: Rectangle2D, maxSpeed: Double = 2, margin: Double = 50) extends Dynamics:
+class BorderForce(
+    bound: Rectangle2D,
+    maxSpeed: Double = Flocking.MaxSpeed,
+    margin: Double = BorderForce.Margin
+) extends Dynamics:
   override def apply(environment: Environment): IO[Environment] =
     IO(environment.replaceBoidsWith(environment.all.map(avoidWall)))
 
@@ -19,4 +23,11 @@ class BorderForce(bound: Rectangle2D, maxSpeed: Double = 2, margin: Double = 50)
     boid.focus(_.velocity).modify(v => (v + forceLeft + forceRight + forceTop + forceBottom).limit(maxSpeed))
 
   private def forceFromDistance(distance: Double): Double =
-    if (distance > margin) 0 else 1 / math.sqrt(distance + 1) * 2
+    if (distance > margin) 0 else BorderForce.Strength / math.sqrt(distance + 1)
+
+object BorderForce:
+  /** Distance from a wall within which boids are pushed back. */
+  val Margin: Double = 50
+
+  /** Push on a boid touching a wall, decaying with the square root of the distance. */
+  val Strength: Double = 2
