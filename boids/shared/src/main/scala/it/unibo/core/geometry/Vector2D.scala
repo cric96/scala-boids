@@ -19,10 +19,7 @@ object Vector2D:
     def /(alpha: Double) = point * (1.0 / alpha)
     def normalize: Vector2D = Vector2D(x / norm, y / norm)
     def norm: Double = math.sqrt(x * x + y * y)
-    def limit(bound: Double): Vector2D = if (bound > norm)
-      normalize * bound
-    else
-      point
+    def limit(bound: Double): Vector2D = if (norm > bound) normalize * bound else point
     def distance(other: Vector2D): Double = math.sqrt(math.pow(x - other.x, 2) + math.pow(y - other.y, 2))
     def roundAt(digits: Int): Vector2D =
       (
