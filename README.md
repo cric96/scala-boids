@@ -61,6 +61,21 @@ To build the static site deployed on GitHub Pages, run `npm run build` (output i
 
 ---
 
+## 🎛️ Parameters
+
+The slider ranges and defaults, and the simulation constants (speed cap, neighbours per boid, border margin and strength), live in [`boids/shared/src/main/resources/parameters.json`](boids/shared/src/main/resources/parameters.json). sbt embeds the file at build time, so the JVM and the web version always share the same settings: edit it and rebuild.
+
+---
+
+## ⏱️ Benchmark
+
+Time a simulation step and the density map for a given number of boids, after as many warm-up steps as measured ones:
+```bash
+sbt "boids/Test/runMain it.unibo.benchmark 5000 300"
+```
+
+---
+
 ## 🧹 Code Formatting
 
 Format all Scala sources with Scalafmt:
