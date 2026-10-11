@@ -27,11 +27,9 @@ class Flocking(
     math.ceil(boids.toDouble / Runtime.getRuntime.availableProcessors).toInt.max(1)
 
   private def steer(environment: Environment)(center: Boid): Boid =
-    applyFlockingFactor(
-      center,
-      environment.nearTo(center, visionRange, neighbours),
-      environment.nearTo(center, separationRange, neighbours)
-    )
+    val neighbourhood = environment.nearTo(center, visionRange.max(separationRange), neighbours)
+    val closerThan = (range: Double) => neighbourhood.filter(_.position.distance(center.position) < range)
+    applyFlockingFactor(center, closerThan(visionRange), closerThan(separationRange))
 
   private def applyFlockingFactor(center: Boid, neighborhood: Seq[Boid], separationNeighborhood: Seq[Boid]): Boid =
     val separationForce = separation(center, separationNeighborhood) * maxForce
@@ -41,14 +39,9 @@ class Flocking(
     center.focus(_.velocity).modify(velocity => (velocity + forces).limit(maxSpeed))
 
   private def separation(center: Boid, neighborhood: Seq[Boid]): Vector2D =
-    val separationForces = for {
-      other <- neighborhood
-      position = other.position
-      distance = center.position.distance(position)
-      if distance > 0
-      difference = center.position - position
-      normalize = difference.normalize * maxSpeed
-    } yield normalize / distance
+    val separationForces = neighborhood
+      .map(other => center.position - other.position)
+      .collect { case difference if difference.norm > 0 => difference.normalize * maxSpeed / difference.norm }
 
     if (separationForces.isEmpty) { zero }
     else
