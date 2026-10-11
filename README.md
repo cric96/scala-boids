@@ -2,6 +2,12 @@
 
 A Scala 3 flocking simulation based on Craig Reynolds' Boids algorithm. It is cross-compiled to run both as a desktop app on the **JVM** (Java Swing) and in the **browser** (Scala.js + p5.js).
 
+**[▶ Try the live demo](https://cric96.github.io/scala-boids/)**
+
+| Web (Scala.js + p5.js) | JVM (Swing + FlatLaf) |
+| :---: | :---: |
+| ![Web version](docs/images/web.gif) | ![JVM version](docs/images/jvm.gif) |
+
 ---
 
 ## ⚡ Quick Start
