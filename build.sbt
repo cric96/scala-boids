@@ -12,7 +12,8 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
       "io.monix" %%% "monix" % "3.4.0",
       "dev.optics" %%% "monocle-core" % "3.3.0",
       "dev.optics" %%% "monocle-macro" % "3.3.0",
-      "com.lihaoyi" %%% "upickle" % "4.4.3"
+      "com.lihaoyi" %%% "upickle" % "4.4.3",
+      "org.scalameta" %%% "munit" % "1.3.6" % Test
     )
   )
   .jsConfigure(p => p.enablePlugins(ScalablyTypedConverterGenSourcePlugin))
