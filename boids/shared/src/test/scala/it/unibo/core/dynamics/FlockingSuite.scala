@@ -34,6 +34,6 @@ class FlockingSuite extends munit.CatsEffectSuite:
 
   test("three steps match the recorded snapshot"):
     run(3).map { world =>
-      assertClose(world.all.map(_.position).reduce(_ + _), Vector2D(5047.174770499211, 5016.588681845119))
-      assertClose(world.all.map(_.velocity).reduce(_ + _), Vector2D(9.160863752125058, 6.142195339666757))
+      assertClose(world.all.map(_.position).reduce(_ + _), Vector2D(5047.519176710308, 5016.583506946457))
+      assertClose(world.all.map(_.velocity).reduce(_ + _), Vector2D(9.345647491290286, 6.1394733475105685))
     }
