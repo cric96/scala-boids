@@ -11,7 +11,8 @@ class Flocking(
     visionRange: Double,
     separationRange: Double,
     maxForce: Double = 0.03,
-    maxSpeed: Double = 2
+    maxSpeed: Double = 2,
+    neighbours: Int = Flocking.Neighbours
 ) extends Dynamics:
   override def apply(environment: Environment): IO[Environment] =
     environment.all
@@ -25,7 +26,11 @@ class Flocking(
     math.ceil(boids.toDouble / Runtime.getRuntime.availableProcessors).toInt.max(1)
 
   private def steer(environment: Environment)(center: Boid): Boid =
-    applyFlockingFactor(center, environment.nearTo(center, visionRange), environment.nearTo(center, separationRange))
+    applyFlockingFactor(
+      center,
+      environment.nearTo(center, visionRange, neighbours),
+      environment.nearTo(center, separationRange, neighbours)
+    )
 
   private def applyFlockingFactor(center: Boid, neighborhood: Seq[Boid], separationNeighborhood: Seq[Boid]): Boid =
     val separationForce = separation(center, separationNeighborhood) * maxForce
@@ -63,3 +68,6 @@ class Flocking(
       normalized - center.velocity
 object Flocking:
   case class Weight(separation: Double, align: Double, cohesion: Double)
+
+  /** Like starlings, each boid follows only its nearest mates, which also bounds the work per boid in dense flocks. */
+  val Neighbours: Int = 20

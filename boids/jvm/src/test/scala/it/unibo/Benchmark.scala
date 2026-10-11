@@ -21,7 +21,10 @@ import scala.util.Random
   val warm = run(Environments.setupBoids(bounds, boids)(using Random(0)))
   val step = millisPer(1)(run(warm)) / steps
   val densities = Seq(20, 5).map(cell => cell -> millisPer(10)(DensityMap(bounds, cell, 100, warm)))
-  val neighbours = warm.all.map(warm.nearTo(_, Parameter.VisionRange.default).size).sum / boids
+  val reach = Vector2D(Parameter.VisionRange.default, Parameter.VisionRange.default)
+  // boids in the vision window of each boid, before flocking caps them to its nearest ones
+  val neighbours =
+    warm.all.map(boid => warm.getAllIn(boid.position - reach, boid.position + reach).size - 1).sum / boids
   println(
     f"boids=$boids%5d  neighbours=$neighbours%4d  step=$step%7.2f ms  " +
       densities.map((cell, ms) => f"density@$cell=$ms%7.2f ms").mkString("  ")

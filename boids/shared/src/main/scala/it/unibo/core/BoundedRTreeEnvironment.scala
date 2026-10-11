@@ -14,7 +14,7 @@ class BoundedRTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extend
 
   private val spatialIndex: RTree[Boid] =
     RTree(adjustedBoids.map(boid => entry(boid.position.x, boid.position.y, boid)))
-  def nearTo(center: Boid, range: Double): Seq[Boid] =
+  def nearTo(center: Boid, range: Double, count: Int): Seq[Boid] =
     val centerPosition = center.position
     val (x, y) = (centerPosition.x, centerPosition.y)
     val (bottomX, bottomY, topX, topY) =
@@ -51,9 +51,11 @@ class BoundedRTreeEnvironment(boids: Seq[Boid], boundingBox: Rectangle2D) extend
 
     val otherSearch = upCorner ++ downCorner ++ rightCorner ++ topCorner ++ bottomCorner ++ leftCorner
 
-    plainSearch
+    spatialIndex
+      .nearestK(x, y, count + 1, range)
       .map(_.value)
       .filter(_ != center)
+      .take(count)
   def getAllIn(bottomLeft: Vector2D, topRight: Vector2D): Seq[Boid] =
     spatialIndex
       .searchAll(bottomLeft.x, bottomLeft.y, topRight.x, topRight.y)
