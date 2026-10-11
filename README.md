@@ -41,19 +41,17 @@ sbt "boids/runMain it.unibo.core.reproduce res/<seed>"
 
 ## 🌐 Running the Web Version Manually
 
-To compile and serve the Scala.js application manually:
+The web version is bundled with [Vite](https://vite.dev) through the official [`@scala-js/vite-plugin-scalajs`](https://github.com/scala-js/vite-plugin-scalajs) (requires Node.js 20.19+):
 
-### 1. Build and Bundle with Webpack
 ```bash
-NODE_OPTIONS=--openssl-legacy-provider sbt boidsJS/fastOptJS::webpack
+cd boids/js
+npm install
+npm run dev
 ```
-*(Note: `NODE_OPTIONS=--openssl-legacy-provider` is required on Node.js 17+ to prevent OpenSSL 3 compatibility errors).*
 
-### 2. Start a Local Server
-Serve the `boids/js` directory to bypass CORS browser restrictions:
+The dev server links Scala.js with sbt on startup; run `sbt ~boidsJS/fastLinkJS` in another terminal to recompile on every change.
 
-*   **Python 3**: `python3 -m http.server --directory boids/js 8000` (Open [http://localhost:8000](http://localhost:8000))
-*   **Node.js**: `npx http-server boids/js` (Open [http://localhost:8080](http://localhost:8080))
+To build the static site deployed on GitHub Pages, run `npm run build` (output in `boids/js/dist`, preview it with `npm run preview`).
 
 ---
 

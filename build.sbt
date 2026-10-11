@@ -16,17 +16,9 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "munit-cats-effect" % "2.2.1" % Test
     )
   )
-  .jsConfigure(p => p.enablePlugins(ScalablyTypedConverterGenSourcePlugin))
   .jsSettings(
-    Compile / npmDependencies ++=
-      Seq(
-        "@types/p5" -> "1.4.2",
-        "p5" -> "1.4.2"
-      ),
-    stOutputPackage := "it.unibo.typings",
-    stMinimize := Selection.AllExcept("p5"),
     scalaJSUseMainModuleInitializer := true,
-    webpackEmitSourceMaps := false
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule))
   )
   .jvmSettings(
     libraryDependencies ++= Seq(

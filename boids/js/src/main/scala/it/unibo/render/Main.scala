@@ -17,12 +17,9 @@ import scala.scalajs.js.annotation.{JSExportTopLevel, JSGlobal, JSGlobalScope, J
 import scala.util.Random
 import scalajs.js
 import scala.math.atan
-import org.scalajs.dom
 
 import java.net.URL
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
-  // Import part
-  it.unibo.typings.p5.p5Require
   // InitialValues
   var boidsCount = 500
   var boidHeight = 10

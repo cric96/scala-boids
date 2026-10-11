@@ -13,26 +13,11 @@ run_jvm() {
 # Function to build and run JS simulation
 run_js() {
   echo "=================================================="
-  echo "📦 Building Scala.js bundle..."
+  echo "🌐 Starting Vite dev server (links Scala.js through sbt)..."
   echo "=================================================="
-  NODE_OPTIONS=--openssl-legacy-provider sbt boidsJS/fastOptJS::webpack
-
-  echo "=================================================="
-  echo "🌐 Starting local HTTP server..."
-  echo "=================================================="
-  if command -v python3 &>/dev/null; then
-    echo "👉 Opening server at: http://localhost:8000"
-    python3 -m http.server --directory boids/js 8000
-  elif command -v python &>/dev/null; then
-    echo "👉 Opening server at: http://localhost:8000"
-    python -m SimpleHTTPServer 8000
-  elif command -v npx &>/dev/null; then
-    echo "👉 Opening server at: http://localhost:8080"
-    npx http-server boids/js
-  else
-    echo "⚠️  No local HTTP server tool (python3, python, npx) found."
-    echo "Please open boids/js/index.html manually or run your preferred server in that folder."
-  fi
+  cd boids/js
+  npm install
+  npm run dev
 }
 
 show_help() {
