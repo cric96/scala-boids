@@ -25,9 +25,16 @@ body {
   align-items: center;
 }
 
+/* The 3D relief covers the 2D canvas, under the control panel */
+.relief {
+  position: fixed;
+  inset: 0;
+}
+
 /* Floating control panel */
 .panel {
   position: fixed;
+  z-index: 1;
   top: 16px;
   left: 16px;
   width: 260px;
@@ -210,6 +217,12 @@ body {
 
 .panel-footer button:hover {
   background: rgba(255, 255, 255, 0.14);
+}
+
+.switches {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Checkbox rendered as a toggle switch, the knob is a radial gradient sliding across */

@@ -14,6 +14,9 @@ object Palette:
   /** Empty space, as dark as the emptiest cell so that the heatmap fades into it. */
   val Background: Int = Magma.head
 
+  /** Around the relief in 3D: the control panel's blue, a shade lighter than empty cells so that the map stands out. */
+  val Sky: Int = 0x0f111a
+
   /** The text of the control panel: light on every colour of the heatmap. */
   val BoidColor: Int = 0xe6e8ef
 

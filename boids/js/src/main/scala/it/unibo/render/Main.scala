@@ -18,6 +18,8 @@ import scalajs.js.typedarray.{Float64Array, Uint8ClampedArray}
 object Main extends App with P5Logic:
   var sliders: Map[Parameter, Slider] = Map.empty
   var showBoids: Element = uninitialized
+  var threeD: Element = uninitialized
+  var reliefView: ReliefView = uninitialized
   var simulation: js.Dynamic = uninitialized
 
   /** The boids of the last step of the simulation, until they are drawn. */
@@ -25,15 +27,18 @@ object Main extends App with P5Logic:
 
   override def setup(): Unit =
     val canvas = createCanvas(windowWidth, windowHeight)
-    val (panelSliders, boidsSwitch) = createControlPanel()
+    val (panelSliders, boidsSwitch, reliefSwitch) = createControlPanel()
     sliders = panelSliders
     showBoids = boidsSwitch
+    threeD = reliefSwitch
+    reliefView = ReliefView(createDiv().addClass("relief"))
     simulation = js.Dynamic.global.simulationWorker
     simulation.onmessage =
       (event => latest = Some(event.data.asInstanceOf[Float64Array])): js.Function1[js.Dynamic, Unit]
     canvas.style("display", "block")
 
   override def draw(): Unit =
+    reliefView.show(threeD.checked())
     simulation.postMessage(
       Protocol.encodeSettings(Protocol.Settings(sliders.view.mapValues(_.value).toMap, boundingBox))
     )
@@ -43,9 +48,12 @@ object Main extends App with P5Logic:
     }
 
   private def drawFrame(environment: Environment): Unit =
+    val densityMap = DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
+    if (threeD.checked()) reliefView.update(Relief(densityMap)) else drawMap(environment, densityMap)
+
+  private def drawMap(environment: Environment, densityMap: DensityMap): Unit =
     drawingContext.fillStyle = css(Palette.Background)
     drawingContext.fillRect(0, 0, width, height)
-    val densityMap = DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
     drawDensityMap(densityMap)
     if (showBoids.checked())
       environment.all
@@ -73,8 +81,8 @@ object Main extends App with P5Logic:
 
 def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, height))
 
-/** Builds the floating control panel, returning its sliders and the "show boids" switch. */
-def createControlPanel(): (Map[Parameter, Slider], Element) =
+/** Builds the floating control panel, returning its sliders and the "show boids" and "3D" switches. */
+def createControlPanel(): (Map[Parameter, Slider], Element, Element) =
   val panel = createDiv().addClass("panel")
   val header = createDiv("<h1>Boids</h1>").addClass("panel-header").parent(panel)
   createButton(chevron)
@@ -88,9 +96,11 @@ def createControlPanel(): (Map[Parameter, Slider], Element) =
     parameters.map(parameter => parameter -> Slider(parameter, group))
   }.toMap
   val footer = createDiv().addClass("panel-footer").parent(content)
-  val showBoids = createCheckbox("Show boids").addClass("switch").parent(footer)
+  val switches = createDiv().addClass("switches").parent(footer)
+  val showBoids = createCheckbox("Show boids").addClass("switch").parent(switches)
+  val threeD = createCheckbox("3D").addClass("switch").parent(switches)
   createButton("Reset").parent(footer).mousePressed(_ => sliders.values.foreach(_.reset()))
-  (sliders, showBoids)
+  (sliders, showBoids, threeD)
 
 private val chevron =
   """<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">""" +
