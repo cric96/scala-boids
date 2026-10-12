@@ -3,45 +3,39 @@ package it.unibo.core
 import it.unibo.core.geometry.Vector2D.Vector2D
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 
-/** Boids around each corner of a grid of square cells, row by row in `counts`. */
-case class DensityMap(origin: Vector2D, cell: Double, columns: Int, rows: Int, counts: IndexedSeq[Int]):
-  private lazy val densest = counts.maxOption.getOrElse(0).max(1).toDouble
+import scala.collection.immutable.ArraySeq
+
+/** Boids around the centre of each cell of a grid of square cells, in boids per cell, row by row in `values`. */
+case class DensityMap(origin: Vector2D, cell: Double, columns: Int, rows: Int, values: IndexedSeq[Double]):
+  private lazy val densest = values.maxOption.getOrElse(0.0)
+  private lazy val average = values.sum / values.size
 
   def cells: Seq[(Int, Int)] = for {
     row <- 0 until rows
     column <- 0 until columns
   } yield (column, row)
-  def count(column: Int, row: Int): Int = counts(row * columns + column)
+  def value(column: Int, row: Int): Double = values(row * columns + column)
 
-  /** The count relative to the densest cell, from zero to one. */
-  def density(column: Int, row: Int): Double = count(column, row) / densest
-  def corner(column: Int, row: Int): Vector2D = origin + Vector2D(column * cell, row * cell)
+  /** The value relative to the densest cell, from zero to one. */
+  def density(column: Int, row: Int): Double = if (densest == 0) 0 else value(column, row) / densest
 
-/** Counted on the torus in O(boids + cells) through a summed-area table. */
+  /** How many times denser than the average the cell is. */
+  def crowding(column: Int, row: Int): Double = if (average == 0) 0 else value(column, row) / average
+  def centre(column: Int, row: Int): Vector2D = origin + Vector2D(column * cell + cell / 2, row * cell + cell / 2)
+
+/** Counted on the torus in O(boids + cells), then smoothed so that every boid weighs on the cells around its own. */
 object DensityMap:
-  def apply(
-      boundingBox: Rectangle2D,
-      precision: Double,
-      visionRange: Double,
-      environment: Environment
-  ): DensityMap =
+  /** Box blurs in a row weigh the boids almost as a gaussian, smooth enough for round blobs and hills. */
+  private val SmoothingPasses = 3
+
+  def apply(boundingBox: Rectangle2D, precision: Double, radius: Double, environment: Environment): DensityMap =
     val columns = (boundingBox.width / precision).ceil.toInt.max(1)
     val rows = (boundingBox.height / precision).ceil.toInt.max(1)
-    // ponytail: the window snaps to whole cells, off by half a cell when visionRange / (2 * precision) is fractional
-    val reach = (visionRange / (2 * precision)).round.toInt
+    // the passes together reach about half the radius on each side of a cell
+    val reach = (radius / (2 * precision * SmoothingPasses)).round.toInt
     val counts = cellCounts(boundingBox, precision, environment, columns, rows)
-    // padded by reach cells on every side, which repeat the cells across the opposite side of the torus
-    val table = summedAreaTable(columns + 2 * reach, rows + 2 * reach)((column, row) =>
-      counts.getOrElse((Math.floorMod(column - reach, columns), Math.floorMod(row - reach, rows)), 0)
-    )
-    def windowCount(column: Int, row: Int): Int =
-      val (right, top) = (column + 2 * reach, row + 2 * reach)
-      table(right)(top) - table(column)(top) - table(right)(row) + table(column)(row)
-    val windowCounts = for {
-      row <- 0 until rows
-      column <- 0 until columns
-    } yield windowCount(column, row)
-    DensityMap(boundingBox.bottomLeft, precision, columns, rows, windowCounts)
+    val smoothed = Iterator.iterate(counts)(blur(_, columns, rows, reach)).drop(SmoothingPasses).next()
+    DensityMap(boundingBox.bottomLeft, precision, columns, rows, ArraySeq.unsafeWrapArray(smoothed))
 
   private def cellCounts(
       boundingBox: Rectangle2D,
@@ -49,20 +43,25 @@ object DensityMap:
       environment: Environment,
       columns: Int,
       rows: Int
-  ): Map[(Int, Int), Int] =
-    environment.all.groupMapReduce { boid =>
+  ): Array[Double] =
+    val counts = environment.all.groupMapReduce { boid =>
       val offset = boid.position - boundingBox.bottomLeft
       (
         Math.floorMod((offset.x / precision).floor.toInt, columns),
         Math.floorMod((offset.y / precision).floor.toInt, rows)
       )
     }(_ => 1)(_ + _)
+    Array.tabulate(columns * rows)(index => counts.getOrElse((index % columns, index / columns), 0).toDouble)
 
-  /** `table(c)(r)` is the number of boids in the cells with column < c and row < r. */
-  private def summedAreaTable(columns: Int, rows: Int)(count: (Int, Int) => Int): Vector[Vector[Int]] =
-    (0 until columns)
-      .scanLeft(Vector.fill(rows + 1)(0)) { (previous, column) =>
-        val columnPrefix = (0 until rows).scanLeft(0)((sum, row) => sum + count(column, row))
-        previous.lazyZip(columnPrefix).map(_ + _)
-      }
-      .toVector
+  /** Every value averaged with the values up to `reach` cells away on the torus, along rows and then along columns. */
+  private def blur(values: Array[Double], columns: Int, rows: Int, reach: Int): Array[Double] =
+    val alongRows = Array.tabulate(rows)(row => average(values.slice(row * columns, (row + 1) * columns), reach))
+    val alongColumns = Array.tabulate(columns)(column => average(alongRows.map(_(column)), reach))
+    Array.tabulate(columns * rows)(index => alongColumns(index % columns)(index / columns))
+
+  /** The average of the `2 * reach + 1` values centred on each one, wrapping around the ends of the line. */
+  private def average(line: Array[Double], reach: Int): Array[Double] =
+    val window = 2 * reach + 1
+    val prefix =
+      Array.tabulate(line.length + 2 * reach)(i => line(Math.floorMod(i - reach, line.length))).scanLeft(0.0)(_ + _)
+    Array.tabulate(line.length)(i => (prefix(i + window) - prefix(i)) / window)

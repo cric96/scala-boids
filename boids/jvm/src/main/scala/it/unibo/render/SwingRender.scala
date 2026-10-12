@@ -53,10 +53,15 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     val precision = renderingFrame.parametersOf(BucketSize)
     val densityMap = DensityMap(bounds, precision.toInt, renderingFrame.parametersOf(BucketRange), environment)
     densityMap.cells.foreach { (column, row) =>
-      val corner = densityMap.corner(column, row)
+      val centre = densityMap.centre(column, row)
       val result = (1.0f - densityMap.density(column, row)) * 0.85f - 0.15f
       renderingContext.setColor(new Color(Color.HSBtoRGB(result.toFloat, 1, 0.5)))
-      renderingContext.fillRect(corner.x.toInt, corner.y.toInt, precision.toInt, precision.toInt)
+      renderingContext.fillRect(
+        (centre.x - precision / 2).toInt,
+        (centre.y - precision / 2).toInt,
+        precision.toInt,
+        precision.toInt
+      )
     }
     val graphics = renderingContext.asInstanceOf[Graphics2D]
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
