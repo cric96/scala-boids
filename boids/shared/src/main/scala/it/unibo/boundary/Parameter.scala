@@ -2,7 +2,8 @@ package it.unibo.boundary
 
 /** The tunable parameters of the simulation, shared by every GUI so that they all expose the same controls. */
 enum Parameter:
-  case Separation, Align, Cohesion, MaxForce, VisionRange, SeparationRange, BucketSize, BucketRange, BoidsCount
+  case Separation, Align, Cohesion, MaxForce, VisionRange, SeparationRange, BucketSize, BucketRange, BlobThreshold,
+    BoidsCount
 
   def label: String = range.label
   def section: String = range.section

@@ -17,6 +17,12 @@ object Palette:
   /** The text of the control panel: light on every colour of the heatmap. */
   val BoidColor: Int = 0xe6e8ef
 
+  /** The accent of the control panel, for the blobs where the boids crowd. */
+  val BlobColor: Int = 0x4fd1c5
+
+  /** Enough to hide the boids inside a blob while hinting at the heatmap below it. */
+  val BlobOpacity: Double = 0.85
+
   /** The colour of a density between zero and one, interpolated between the nearest stops of [[Magma]]. */
   def magma(density: Double): Int =
     val position = density.max(0).min(1) * (Magma.size - 1)

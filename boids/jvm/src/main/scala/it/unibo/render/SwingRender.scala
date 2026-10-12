@@ -5,6 +5,7 @@ import it.unibo.boundary.Parameter.*
 import it.unibo.core.{Boid, DensityMap, Environment}
 import it.unibo.core.dynamics.Flocking
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
+import it.unibo.core.geometry.Vector2D.Vector2D
 
 import java.awt.{
   BorderLayout,
@@ -49,24 +50,27 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     graphics.fillRect(0, 0, frame.getWidth, frame.getHeight)
     boidsCountStrategy(renderingFrame.parametersOf(BoidsCount).toInt)
     val precision = renderingFrame.parametersOf(BucketSize)
-    drawDensityMap(graphics, DensityMap(bounds, precision, renderingFrame.parametersOf(BucketRange), environment))
+    val densityMap = DensityMap(bounds, precision, renderingFrame.parametersOf(BucketRange), environment)
+    drawDensityMap(graphics, densityMap)
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    if (renderingFrame.boidsEnabled) drawBoids(graphics, environment.all)
+    if (renderingFrame.boidsEnabled)
+      fill(graphics, environment.all.view.map(Glyph.vertices(_).toList), Color(Palette.BoidColor))
+    val (red, green, blue) = Palette.channels(Palette.BlobColor)
+    val blobColor = Color(red, green, blue, (Palette.BlobOpacity * Palette.ChannelMax).round.toInt)
+    fill(graphics, Blobs(densityMap, renderingFrame.parametersOf(BlobThreshold)), blobColor)
     renderingFrame.backgroundImage = Some(image)
     frame.validate()
     frame.repaint()
 
-  /** All in one path filled once. */
-  private def drawBoids(graphics: Graphics2D, boids: Seq[Boid]): Unit =
+  /** All in one path filled once, so that the squares of a blob join without seams. */
+  private def fill(graphics: Graphics2D, polygons: Iterable[Seq[Vector2D]], color: Color): Unit =
     val path = Path2D.Double()
-    boids.foreach { boid =>
-      val (tip, left, right) = Glyph.vertices(boid)
-      path.moveTo(tip.x, tip.y)
-      path.lineTo(left.x, left.y)
-      path.lineTo(right.x, right.y)
+    polygons.foreach { polygon =>
+      path.moveTo(polygon.head.x, polygon.head.y)
+      polygon.tail.foreach(point => path.lineTo(point.x, point.y))
       path.closePath()
     }
-    graphics.setColor(Color(Palette.BoidColor))
+    graphics.setColor(color)
     graphics.fill(path)
 
   /** One pixel per cell stretched over the frame, which smooths it. */

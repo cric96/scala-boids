@@ -4,6 +4,7 @@ import it.unibo.Slider
 import it.unibo.boundary.{ConfigurationStore, Parameter, Renderer}
 import it.unibo.boundary.Parameter.*
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
+import it.unibo.core.geometry.Vector2D.Vector2D
 import it.unibo.core.{Boid, DensityMap, Dynamics, Environment, Environments}
 import it.unibo.core.dynamics.{DynamicFactory, Flocking}
 import it.unibo.core.simulation.Simulation
@@ -56,21 +57,25 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
         .unsafeRunCancelable()
     drawingContext.fillStyle = css(Palette.Background)
     drawingContext.fillRect(0, 0, width, height)
-    drawDensityMap(DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment))
-    if (showBoids.checked()) drawBoids(environment.all)
+    val densityMap = DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
+    drawDensityMap(densityMap)
+    if (showBoids.checked()) fill(environment.all.view.map(Glyph.vertices(_).toList), Palette.BoidColor)
+    fill(Blobs(densityMap, sliders(BlobThreshold).value), Palette.BlobColor, Palette.BlobOpacity)
 
-  /** All in one path filled once, straight on the canvas: p5 calls and a fill per boid would dominate the frame. */
-  private def drawBoids(boids: Seq[Boid]): Unit =
+  /** All in one path filled once, straight on the canvas: p5 calls and a fill per polygon would dominate the frame, and
+    * the squares of a blob join without seams.
+    */
+  private def fill(polygons: Iterable[Seq[Vector2D]], rgb: Int, opacity: Double = 1): Unit =
     drawingContext.beginPath()
-    boids.foreach { boid =>
-      val (tip, left, right) = Glyph.vertices(boid)
-      drawingContext.moveTo(tip.x, tip.y)
-      drawingContext.lineTo(left.x, left.y)
-      drawingContext.lineTo(right.x, right.y)
+    polygons.foreach { polygon =>
+      drawingContext.moveTo(polygon.head.x, polygon.head.y)
+      polygon.tail.foreach(point => drawingContext.lineTo(point.x, point.y))
       drawingContext.closePath()
     }
-    drawingContext.fillStyle = css(Palette.BoidColor)
+    drawingContext.fillStyle = css(rgb)
+    drawingContext.globalAlpha = opacity
     drawingContext.fill()
+    drawingContext.globalAlpha = 1
 
   override def getCurrentConfig(): ConfigurationStore.Config = ConfigurationStore.Config.from(sliders(_).value)
 
