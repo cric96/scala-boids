@@ -43,14 +43,17 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     Rectangle2D(Vector2D(0, 0), Vector2D(frame.getWidth, frame.getHeight))
 
   def render(environment: Environment): Unit =
-    val image = config.createCompatibleImage(frame.getWidth, frame.getHeight)
-    val renderingContext = image.getGraphics
-    val graphics = renderingContext.asInstanceOf[Graphics2D]
-    graphics.setColor(Color(Palette.Background))
-    graphics.fillRect(0, 0, frame.getWidth, frame.getHeight)
     boidsCountStrategy(renderingFrame.parametersOf(BoidsCount).toInt)
     val precision = renderingFrame.parametersOf(BucketSize)
     val densityMap = DensityMap(bounds, precision, renderingFrame.parametersOf(BucketRange), environment)
+    if (renderingFrame.reliefEnabled) renderingFrame.relief.update(Relief(densityMap))
+    else drawMap(environment, densityMap)
+
+  private def drawMap(environment: Environment, densityMap: DensityMap): Unit =
+    val image = config.createCompatibleImage(frame.getWidth, frame.getHeight)
+    val graphics = image.getGraphics.asInstanceOf[Graphics2D]
+    graphics.setColor(Color(Palette.Background))
+    graphics.fillRect(0, 0, frame.getWidth, frame.getHeight)
     drawDensityMap(graphics, densityMap)
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     if (renderingFrame.boidsEnabled)

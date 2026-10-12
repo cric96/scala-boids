@@ -17,13 +17,15 @@ import java.awt.{
   RenderingHints
 }
 import java.awt.image.BufferedImage
-import javax.swing.{BorderFactory, BoxLayout, Icon, JButton, JCheckBox, JComponent, JLabel, JPanel}
+import javax.swing.{BorderFactory, BoxLayout, Icon, JButton, JCheckBox, JComponent, JLabel, JPanel, OverlayLayout}
 import scala.jdk.CollectionConverters.*
 
 /** Draws the simulation image with the floating control panel (the same one of the web version) on top. */
 class RenderingPanel(control: Boolean, var backgroundImage: Option[BufferedImage]) extends JPanel:
   private val sliders: Map[Parameter, Slider] = Parameter.values.map(parameter => parameter -> Slider(parameter)).toMap
   private val showBoids = JCheckBox("Show boids")
+  private val threeD = JCheckBox("3D")
+  val relief: ReliefView = ReliefView()
   private val reset = JButton("Reset")
   private val sections = if (control) Parameter.sections.map(section) else Nil
   private val body = column(sections :+ footer*)
@@ -37,11 +39,22 @@ class RenderingPanel(control: Boolean, var backgroundImage: Option[BufferedImage
   card.add(body, BorderLayout.CENTER)
   overlay.setOpaque(false)
   overlay.add(card)
-  setLayout(BorderLayout())
-  add(overlay, BorderLayout.NORTH)
+  threeD.addActionListener(_ => relief.setVisible(threeD.isSelected))
+  relief.setVisible(false)
+  // the control panel floats above the relief, both from the top left corner
+  setLayout(OverlayLayout(this))
+  Seq(overlay, relief).foreach { layer =>
+    layer.setAlignmentX(Component.LEFT_ALIGNMENT)
+    layer.setAlignmentY(Component.TOP_ALIGNMENT)
+    add(layer)
+  }
 
   def parametersOf(param: Parameter): Double = sliders(param).value
   def boidsEnabled: Boolean = showBoids.isSelected
+  def reliefEnabled: Boolean = threeD.isSelected
+
+  /** The control panel overlaps the relief, which must be painted first. */
+  override def isOptimizedDrawingEnabled: Boolean = false
   override def paintComponent(g: Graphics): Unit =
     super.paintComponent(g)
     backgroundImage.foreach(backgroundImage => g.drawImage(backgroundImage, 0, 0, this))
@@ -59,7 +72,8 @@ class RenderingPanel(control: Boolean, var backgroundImage: Option[BufferedImage
     column(title +: parameters.map(sliders(_).render)*)
 
   private def footer: JComponent =
-    val footer = transparent(JPanel(BorderLayout()), showBoids -> BorderLayout.WEST, reset -> BorderLayout.EAST)
+    val footer =
+      transparent(JPanel(BorderLayout()), column(showBoids, threeD) -> BorderLayout.WEST, reset -> BorderLayout.EAST)
     footer.setBorder(
       BorderFactory.createCompoundBorder(
         BorderFactory.createEmptyBorder(14, 0, 0, 0),
