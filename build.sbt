@@ -4,6 +4,15 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / name := "scala-boids"
 
+lazy val javaFxPlatform: String = {
+  val arm = System.getProperty("os.arch") == "aarch64"
+  System.getProperty("os.name").toLowerCase match {
+    case os if os.contains("win") => "win"
+    case os if os.contains("mac") => if (arm) "mac-aarch64" else "mac"
+    case _ => if (arm) "linux-aarch64" else "linux"
+  }
+}
+
 lazy val boids = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Full)
   .withoutSuffixFor(JVMPlatform)
@@ -18,7 +27,8 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
     ),
     // parameters.json is embedded at build time: the JVM, the browser and the tests all read the same file
     Compile / sourceGenerators += Def.task {
-      val json = (ThisBuild / baseDirectory).value / "boids" / "shared" / "src" / "main" / "resources" / "parameters.json"
+      val json =
+        (ThisBuild / baseDirectory).value / "boids" / "shared" / "src" / "main" / "resources" / "parameters.json"
       val generated = (Compile / sourceManaged).value / "it" / "unibo" / "boundary" / "ParametersJson.scala"
       val quotes = "\"\"\""
       val source = Seq(
@@ -49,7 +59,10 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
       "org.rogach" %% "scallop" % "6.0.1",
       "com.lihaoyi" %% "os-lib" % "0.11.8",
       "com.formdev" % "flatlaf" % "3.7.2"
-    )
+    ),
+    // the 3D relief: JavaFX ships its renderer as native code, one jar per platform
+    libraryDependencies ++= Seq("base", "graphics", "swing")
+      .map(module => "org.openjfx" % s"javafx-$module" % "25.0.4" classifier javaFxPlatform)
   )
 lazy val root = (project in file("."))
   .aggregate(boids.js, boids.jvm)
