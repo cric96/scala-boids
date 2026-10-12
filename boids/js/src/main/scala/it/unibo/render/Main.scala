@@ -114,9 +114,11 @@ def drawDensityMap(
     visionRange: Double,
     environment: Environment
 ): Unit =
-  DensityMap(boundingBox, precision, visionRange, environment).foreach { (coord, density) =>
-    drawingContext.fillStyle = colorFromDensity(density)
-    drawingContext.fillRect(coord.x, coord.y, precision, precision)
+  val densityMap = DensityMap(boundingBox, precision, visionRange, environment)
+  densityMap.cells.foreach { (column, row) =>
+    val corner = densityMap.corner(column, row)
+    drawingContext.fillStyle = colorFromDensity(densityMap.density(column, row))
+    drawingContext.fillRect(corner.x, corner.y, precision, precision)
   }
 
 /** Straight on the canvas, as p5 calls cost more than the drawing; negative hues are clamped to red like p5 did. */

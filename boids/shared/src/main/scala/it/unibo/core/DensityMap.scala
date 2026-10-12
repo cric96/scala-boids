@@ -3,14 +3,28 @@ package it.unibo.core
 import it.unibo.core.geometry.Vector2D.Vector2D
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 
-/** Density of boids around each cell corner on the torus, counted in O(boids + cells) through a summed-area table. */
+/** Boids around each corner of a grid of square cells, row by row in `counts`. */
+case class DensityMap(origin: Vector2D, cell: Double, columns: Int, rows: Int, counts: IndexedSeq[Int]):
+  private lazy val densest = counts.maxOption.getOrElse(0).max(1).toDouble
+
+  def cells: Seq[(Int, Int)] = for {
+    row <- 0 until rows
+    column <- 0 until columns
+  } yield (column, row)
+  def count(column: Int, row: Int): Int = counts(row * columns + column)
+
+  /** The count relative to the densest cell, from zero to one. */
+  def density(column: Int, row: Int): Double = count(column, row) / densest
+  def corner(column: Int, row: Int): Vector2D = origin + Vector2D(column * cell, row * cell)
+
+/** Counted on the torus in O(boids + cells) through a summed-area table. */
 object DensityMap:
   def apply(
       boundingBox: Rectangle2D,
       precision: Double,
       visionRange: Double,
       environment: Environment
-  ): Seq[(Vector2D, Double)] =
+  ): DensityMap =
     val columns = (boundingBox.width / precision).ceil.toInt.max(1)
     val rows = (boundingBox.height / precision).ceil.toInt.max(1)
     // ponytail: the window snaps to whole cells, off by half a cell when visionRange / (2 * precision) is fractional
@@ -23,13 +37,11 @@ object DensityMap:
     def windowCount(column: Int, row: Int): Int =
       val (right, top) = (column + 2 * reach, row + 2 * reach)
       table(right)(top) - table(column)(top) - table(right)(row) + table(column)(row)
-    val densities = for {
-      column <- 0 until columns
+    val windowCounts = for {
       row <- 0 until rows
-    } yield Vector2D(boundingBox.bottomLeft.x + column * precision, boundingBox.bottomLeft.y + row * precision) ->
-      windowCount(column, row)
-    val maxCount = densities.map(_._2).maxOption.getOrElse(0).max(1).toDouble
-    densities.map((coord, count) => coord -> count / maxCount)
+      column <- 0 until columns
+    } yield windowCount(column, row)
+    DensityMap(boundingBox.bottomLeft, precision, columns, rows, windowCounts)
 
   private def cellCounts(
       boundingBox: Rectangle2D,
