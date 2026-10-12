@@ -24,7 +24,6 @@ import java.net.URL
 object Main extends App with P5Logic with Renderer with ConfigurationStore:
   // InitialValues
   var boidsCount = BoidsCount.default.toInt
-  var boidHeight = 10
   var environment: Environment = _
   var cancelSimulation: () => Future[Unit] = _
   var sliders: Map[Parameter, Slider] = Map.empty
@@ -60,23 +59,18 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     drawDensityMap(DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment))
     if (showBoids.checked()) drawBoids(environment.all)
 
-  /** Straight on the canvas with the corners computed here: five p5 calls per boid would dominate the frame. */
+  /** All in one path filled once, straight on the canvas: p5 calls and a fill per boid would dominate the frame. */
   private def drawBoids(boids: Seq[Boid]): Unit =
-    val half = boidHeight / 2.0
-    drawingContext.fillStyle = "white"
-    drawingContext.strokeStyle = "black"
+    drawingContext.beginPath()
     boids.foreach { boid =>
-      val forward = boid.velocity.normalize
-      val side = Vector2D(-forward.y, forward.x)
-      val base = boid.position - forward * half
-      val corners = Seq(boid.position + forward * boidHeight, base + side * half, base - side * half)
-      drawingContext.beginPath()
-      drawingContext.moveTo(corners.head.x, corners.head.y)
-      corners.tail.foreach(corner => drawingContext.lineTo(corner.x, corner.y))
+      val (tip, left, right) = Glyph.vertices(boid)
+      drawingContext.moveTo(tip.x, tip.y)
+      drawingContext.lineTo(left.x, left.y)
+      drawingContext.lineTo(right.x, right.y)
       drawingContext.closePath()
-      drawingContext.fill()
-      drawingContext.stroke()
     }
+    drawingContext.fillStyle = css(Palette.BoidColor)
+    drawingContext.fill()
 
   override def getCurrentConfig(): ConfigurationStore.Config = ConfigurationStore.Config.from(sliders(_).value)
 

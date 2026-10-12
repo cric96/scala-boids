@@ -14,6 +14,9 @@ object Palette:
   /** Empty space, as dark as the emptiest cell so that the heatmap fades into it. */
   val Background: Int = Magma.head
 
+  /** The text of the control panel: light on every colour of the heatmap. */
+  val BoidColor: Int = 0xe6e8ef
+
   /** The colour of a density between zero and one, interpolated between the nearest stops of [[Magma]]. */
   def magma(density: Double): Int =
     val position = density.max(0).min(1) * (Magma.size - 1)

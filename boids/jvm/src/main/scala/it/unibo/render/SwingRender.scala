@@ -2,7 +2,7 @@ package it.unibo.render
 
 import it.unibo.boundary.{ConfigurationStore, Renderer}
 import it.unibo.boundary.Parameter.*
-import it.unibo.core.{DensityMap, Environment}
+import it.unibo.core.{Boid, DensityMap, Environment}
 import it.unibo.core.dynamics.Flocking
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 
@@ -16,14 +16,13 @@ import java.awt.{
   Graphics2D,
   GraphicsEnvironment,
   GridLayout,
-  Polygon,
   Rectangle,
   RenderingHints,
   geom
 }
 import java.awt.image.BufferedImage
 import javax.swing.{BoxLayout, JButton, JComponent, JFrame, JLabel, JPanel, JSlider, WindowConstants}
-import java.awt.geom.AffineTransform
+import java.awt.geom.{AffineTransform, Path2D}
 import scala.collection.immutable.{ListMap, TreeMap}
 
 /** */
@@ -38,8 +37,6 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
   frame.setVisible(true)
   private val renderingFrame = RenderingPanel(control, None)
   frame.setContentPane(renderingFrame)
-  // Same triangle as the web version (`Main.draw`): tip ahead of the boid, white with a black outline
-  private val boidShape = Polygon(Array(0, 5, -5), Array(-10, 5, 5), 3)
 
   def bounds: Rectangle2D =
     Rectangle2D(Vector2D(0, 0), Vector2D(frame.getWidth, frame.getHeight))
@@ -54,19 +51,23 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     val precision = renderingFrame.parametersOf(BucketSize)
     drawDensityMap(graphics, DensityMap(bounds, precision, renderingFrame.parametersOf(BucketRange), environment))
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-    if (renderingFrame.boidsEnabled)
-      environment.all.foreach(boid =>
-        val transform = AffineTransform.getTranslateInstance(boid.position.x, boid.position.y)
-        transform.rotate(math.atan2(boid.velocity.y, boid.velocity.x) + Math.PI / 2)
-        val triangle = transform.createTransformedShape(boidShape)
-        graphics.setColor(Color.white)
-        graphics.fill(triangle)
-        graphics.setColor(Color.black)
-        graphics.draw(triangle)
-      )
+    if (renderingFrame.boidsEnabled) drawBoids(graphics, environment.all)
     renderingFrame.backgroundImage = Some(image)
     frame.validate()
     frame.repaint()
+
+  /** All in one path filled once. */
+  private def drawBoids(graphics: Graphics2D, boids: Seq[Boid]): Unit =
+    val path = Path2D.Double()
+    boids.foreach { boid =>
+      val (tip, left, right) = Glyph.vertices(boid)
+      path.moveTo(tip.x, tip.y)
+      path.lineTo(left.x, left.y)
+      path.lineTo(right.x, right.y)
+      path.closePath()
+    }
+    graphics.setColor(Color(Palette.BoidColor))
+    graphics.fill(path)
 
   /** One pixel per cell stretched over the frame, which smooths it. */
   private def drawDensityMap(graphics: Graphics2D, densityMap: DensityMap): Unit =
