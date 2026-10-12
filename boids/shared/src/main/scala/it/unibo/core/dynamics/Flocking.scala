@@ -48,7 +48,7 @@ class Flocking(
     if (separationForces.isEmpty) { zero }
     else
       val combinedForces = separationForces.reduce(_ + _) / separationForces.size
-      combinedForces.normalize - center.velocity
+      combinedForces.normalize * maxSpeed - center.velocity
   private def align(center: Boid, mates: Seq[Mate]): Vector2D =
     if (mates.isEmpty) zero
     else

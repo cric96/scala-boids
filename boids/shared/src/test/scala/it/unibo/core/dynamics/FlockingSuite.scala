@@ -1,7 +1,7 @@
 package it.unibo.core.dynamics
 
 import it.unibo.Fixtures.{population, screen, tolerance}
-import it.unibo.boundary.{ConfigurationStore, Settings}
+import it.unibo.boundary.{ConfigurationStore, Parameter, Settings}
 import it.unibo.core.geometry.Vector2D
 import it.unibo.core.{Boid, GridEnvironment}
 
@@ -57,6 +57,15 @@ class FlockingSuite extends munit.CatsEffectSuite:
     dynamics(start).map(
       _.all.foreach(boid => assert(boid.velocity.norm <= Settings.constants.maxSpeed + tolerance, boid))
     )
+
+  test("boids closer than the separation range drift apart with the default weights"):
+    val heading = Vector2D(Settings.constants.maxSpeed, 0)
+    val across = Vector2D(0, Parameter.SeparationRange.default / 2)
+    val pair = Seq(Boid(screen.center, heading), Boid(screen.center + across, heading))
+    dynamics(GridEnvironment(pair, screen)).map { world =>
+      val Seq(first, second) = world.all: @unchecked
+      assert(screen.offset(first.position, second.position).norm > across.norm, world.all)
+    }
 
   test("boids sharing the same position stay finite"):
     val overlapping =
