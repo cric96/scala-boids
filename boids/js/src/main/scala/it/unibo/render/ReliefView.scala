@@ -58,7 +58,8 @@ class ReliefView(container: Element):
     if (pointed) sketch.orbitControl()
     sketch.ambientLight(ReliefView.Ambient * Palette.ChannelMax)
     val (x, y, z) = ReliefView.LightDirection
-    sketch.directionalLight((1 - ReliefView.Ambient) * Palette.ChannelMax, x, y, z)
+    val gray = (1 - ReliefView.Ambient) / ReliefView.P5Diffuse * Palette.ChannelMax
+    sketch.directionalLight(gray, gray, gray, x, y, z)
     sketch.noStroke()
     // lays the map on the floor, its hills rising, so that the mouse turns it around its own axis
     sketch.rotateX(math.Pi / 2)
@@ -78,6 +79,9 @@ object ReliefView:
 
   /** The share of the light that reaches every face, the rest comes from [[LightDirection]]. */
   private val Ambient = 0.45
+
+  /** The share of each lamp's light that p5 keeps: undone, so that the relief is as bright as on the JVM. */
+  private val P5Diffuse = 0.73
 
   /** Where the light travels to: down and away from the viewer's left shoulder, lighting the slopes that face them. */
   private val LightDirection = (0.4, 1.0, -0.6)

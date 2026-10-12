@@ -30,7 +30,8 @@ trait Sketch extends js.Object:
       upZ: Double
   ): Unit = js.native
   def ambientLight(gray: Double): Unit = js.native
-  def directionalLight(gray: Double, x: Double, y: Double, z: Double): Unit = js.native
+  // with fewer arguments p5 takes the numbers as the colour channels before the direction
+  def directionalLight(red: Double, green: Double, blue: Double, x: Double, y: Double, z: Double): Unit = js.native
   def noStroke(): Unit = js.native
   def rotateX(angle: Double): Unit = js.native
   def translate(x: Double, y: Double): Unit = js.native
