@@ -59,6 +59,20 @@ The dev server links Scala.js with sbt on startup; run `sbt ~boidsJS/fastLinkJS`
 
 To build the static site deployed on GitHub Pages, run `npm run build` (output in `boids/js/dist`, preview it with `npm run preview`).
 
+The simulation steps in a Web Worker (`boids/js/worker.js`), so the page only draws and stays responsive with thousands of boids; Scala.js links the page and the worker as two modules sharing their code.
+
+---
+
+## 🗺️ Views
+
+Both versions draw the same views, from the shared code in `boids/shared/src/main/scala/it/unibo/render`:
+
+- **Heatmap**: the density of the boids, smoothed around each boid and coloured with the perceptual *magma* palette.
+- **Blobs**: where the boids crowd more than *Blob above (× average)* times the average density, a teal shape covers them, traced by marching squares. Raise the slider to the top to hide them.
+- **3D**: the switch raises the heatmap into a lit relief. Drag to orbit it, scroll to zoom. The JVM draws it with JavaFX, the browser with p5 WEBGL.
+
+Up to 10000 boids: drag the *Boids* slider.
+
 ---
 
 ## 🎛️ Parameters
