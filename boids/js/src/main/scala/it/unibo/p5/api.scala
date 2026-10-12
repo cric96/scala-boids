@@ -20,9 +20,6 @@ object api extends js.Object:
   def createSpan(html: String = js.native): Element = js.native
   def createCheckbox(label: String = js.native, value: Boolean = js.native): Element = js.native
   def createSlider(min: Double, max: Double, value: Double = js.native, step: Double = js.native): Element = js.native
-  def noLoop(): Unit = js.native
-  def redraw(): Unit = js.native
-  def background(gray: Double): Unit = js.native
 
 @js.native
 trait Element extends js.Object:

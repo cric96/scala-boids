@@ -1,70 +1,62 @@
 package it.unibo.render
 
 import it.unibo.Slider
-import it.unibo.boundary.{ConfigurationStore, Parameter, Renderer}
+import it.unibo.boundary.Parameter
 import it.unibo.boundary.Parameter.*
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.geometry.Vector2D.Vector2D
-import it.unibo.core.{Boid, DensityMap, Dynamics, Environment, Environments}
-import it.unibo.core.dynamics.{DynamicFactory, Flocking}
-import it.unibo.core.simulation.Simulation
+import it.unibo.core.{DensityMap, Environment, GridEnvironment}
 import it.unibo.p5.{Element, P5, P5Logic}
 import it.unibo.p5.api.*
-import cats.effect.unsafe.implicits.global
+import it.unibo.worker.Protocol
 
-import concurrent.duration.DurationInt
-import scala.concurrent.Future
-import scala.language.postfixOps
-import scala.scalajs.js.annotation.{JSExportTopLevel, JSGlobal, JSGlobalScope, JSName}
-import scala.util.Random
+import scala.compiletime.uninitialized
 import scalajs.js
-import scalajs.js.typedarray.Uint8ClampedArray
-import scala.math.atan
+import scalajs.js.typedarray.{Float64Array, Uint8ClampedArray}
 
-import java.net.URL
-object Main extends App with P5Logic with Renderer with ConfigurationStore:
-  // InitialValues
-  var boidsCount = BoidsCount.default.toInt
-  var environment: Environment = _
-  var cancelSimulation: () => Future[Unit] = _
+/** Draws the boids that the simulation worker sends, as often as the browser repaints. */
+object Main extends App with P5Logic:
   var sliders: Map[Parameter, Slider] = Map.empty
-  var showBoids: Element = _
-  // Context
-  given Random = Random(0)
+  var showBoids: Element = uninitialized
+  var simulation: js.Dynamic = uninitialized
+
+  /** The boids of the last step of the simulation, until they are drawn. */
+  var latest: Option[Float64Array] = None
 
   override def setup(): Unit =
-    // gui setup
     val canvas = createCanvas(windowWidth, windowHeight)
-    val bounds = boundingBox
     val (panelSliders, boidsSwitch) = createControlPanel()
     sliders = panelSliders
     showBoids = boidsSwitch
-    environment = Environments.setupBoids(bounds, boidsCount)
-    cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(bounds), 33 millisecond)
-      .loop()
-      .unsafeRunCancelable()
-
+    simulation = js.Dynamic.global.simulationWorker
+    simulation.onmessage =
+      (event => latest = Some(event.data.asInstanceOf[Float64Array])): js.Function1[js.Dynamic, Unit]
     canvas.style("display", "block")
-    noLoop()
 
   override def draw(): Unit =
-    if (sliders(BoidsCount).value.toInt != boidsCount)
-      boidsCount = sliders(BoidsCount).value.toInt
-      cancelSimulation()
-      environment = Environments.setupBoids(boundingBox, boidsCount)
-      cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(boundingBox), 33 millisecond)
-        .loop()
-        .unsafeRunCancelable()
+    simulation.postMessage(
+      Protocol.encodeSettings(Protocol.Settings(sliders.view.mapValues(_.value).toMap, boundingBox))
+    )
+    latest.foreach { boids =>
+      latest = None
+      drawFrame(GridEnvironment(Protocol.decodeBoids(boids), boundingBox))
+    }
+
+  private def drawFrame(environment: Environment): Unit =
     drawingContext.fillStyle = css(Palette.Background)
     drawingContext.fillRect(0, 0, width, height)
     val densityMap = DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
     drawDensityMap(densityMap)
-    if (showBoids.checked()) fill(environment.all.view.map(Glyph.vertices(_).toList), Palette.BoidColor)
+    if (showBoids.checked())
+      environment.all
+        .grouped(GlyphsPerPath)
+        .foreach(boids => fill(boids.map(Glyph.vertices(_).toList), Palette.BoidColor))
     fill(Blobs(densityMap, sliders(BlobThreshold).value), Palette.BlobColor, Palette.BlobOpacity)
 
-  /** All in one path filled once, straight on the canvas: p5 calls and a fill per polygon would dominate the frame, and
-    * the squares of a blob join without seams.
-    */
+  /** Canvas fills slow down faster than the paths grow: 10000 glyphs take 30 ms a hundred at a time, 200 ms at once. */
+  private val GlyphsPerPath = 100
+
+  /** All in one path filled once, straight on the canvas, so that the squares of a blob join without seams. */
   private def fill(polygons: Iterable[Seq[Vector2D]], rgb: Int, opacity: Double = 1): Unit =
     drawingContext.beginPath()
     polygons.foreach { polygon =>
@@ -77,11 +69,6 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
     drawingContext.fill()
     drawingContext.globalAlpha = 1
 
-  override def getCurrentConfig(): ConfigurationStore.Config = ConfigurationStore.Config.from(sliders(_).value)
-
-  override def render(environment: Environment): Unit =
-    this.environment = environment
-    redraw()
   P5(this)
 
 def boundingBox: Rectangle2D = Rectangle2D(Vector2D(0, 0), Vector2D(width, height))

@@ -1,3 +1,5 @@
+import org.scalajs.linker.interface.ModuleInitializer
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / name := "scala-boids"
@@ -31,7 +33,11 @@ lazy val boids = crossProject(JSPlatform, JVMPlatform)
     }.taskValue
   )
   .jsSettings(
-    scalaJSUseMainModuleInitializer := true,
+    // the page and the simulation worker, sharing their code through an internal module
+    Compile / scalaJSModuleInitializers ++= Seq(
+      ModuleInitializer.mainMethodWithArgs("it.unibo.render.Main", "main").withModuleID("main"),
+      ModuleInitializer.mainMethodWithArgs("it.unibo.worker.SimulationWorker", "main").withModuleID("worker")
+    ),
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.ESModule))
   )
   .jvmSettings(
