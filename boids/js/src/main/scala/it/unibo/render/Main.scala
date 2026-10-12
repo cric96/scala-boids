@@ -26,7 +26,8 @@ object Main extends App with P5Logic:
   var latest: Option[Float64Array] = None
 
   override def setup(): Unit =
-    val canvas = createCanvas(windowWidth, windowHeight)
+    // a block straight away: inline, the canvas overflows the page, whose scrollbars shrink the window for the relief
+    createCanvas(windowWidth, windowHeight).style("display", "block")
     val (panelSliders, boidsSwitch, reliefSwitch) = createControlPanel()
     sliders = panelSliders
     showBoids = boidsSwitch
@@ -35,7 +36,8 @@ object Main extends App with P5Logic:
     simulation = js.Dynamic.global.simulationWorker
     simulation.onmessage =
       (event => latest = Some(event.data.asInstanceOf[Float64Array])): js.Function1[js.Dynamic, Unit]
-    canvas.style("display", "block")
+
+  override def windowResized(): Unit = resizeCanvas(windowWidth, windowHeight)
 
   override def draw(): Unit =
     reliefView.show(threeD.checked())

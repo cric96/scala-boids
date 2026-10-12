@@ -8,12 +8,14 @@ import scala.scalajs.js.annotation.JSGlobal
 trait Sketch extends js.Object:
   var setup: js.Function0[Unit] = js.native
   var draw: js.Function0[Unit] = js.native
+  var windowResized: js.Function0[Unit] = js.native
   val WEBGL: String = js.native
   val windowWidth: Double = js.native
   val windowHeight: Double = js.native
   val width: Double = js.native
   val height: Double = js.native
   def createCanvas(width: Double, height: Double, renderer: String): Element = js.native
+  def resizeCanvas(width: Double, height: Double): Unit = js.native
   def background(color: String): Unit = js.native
   def orbitControl(): Unit = js.native
   def camera(

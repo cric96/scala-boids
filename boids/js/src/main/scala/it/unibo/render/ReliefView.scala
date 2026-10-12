@@ -19,6 +19,7 @@ class ReliefView(container: Element):
       sketch = instance
       instance.setup = () => setup()
       instance.draw = () => if (shown) draw()
+      instance.windowResized = () => instance.resizeCanvas(instance.windowWidth, instance.windowHeight)
     },
     container
   )

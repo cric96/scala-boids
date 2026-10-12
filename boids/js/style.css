@@ -11,6 +11,8 @@
 
 html, body {
   height: 100%;
+  /* the canvases fill the window, and only the control panel scrolls */
+  overflow: hidden;
 }
 
 body {

@@ -8,3 +8,4 @@ object P5:
   def apply(logic: P5Logic): Unit =
     js.Dynamic.global.window.draw = () => logic.draw()
     js.Dynamic.global.window.setup = () => logic.setup()
+    js.Dynamic.global.window.windowResized = () => logic.windowResized()

@@ -15,6 +15,7 @@ object api extends js.Object:
   val drawingContext: js.Dynamic = js.native
   val document: js.Dynamic = js.native
   def createCanvas(width: Double, height: Double): Element = js.native
+  def resizeCanvas(width: Double, height: Double): Unit = js.native
   def createButton(label: String): Element = js.native
   def createDiv(html: String = js.native): Element = js.native
   def createSpan(html: String = js.native): Element = js.native

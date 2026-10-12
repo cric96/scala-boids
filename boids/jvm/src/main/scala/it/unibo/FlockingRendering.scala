@@ -1,7 +1,7 @@
 package it.unibo
 
-import it.unibo.boundary.{ConfigurationStore, Parameter}
-import it.unibo.core.{Boid, Dynamics, Environment, Environments}
+import it.unibo.boundary.{ConfigurationStore, Parameter, Renderer}
+import it.unibo.core.{Boid, Dynamics, Environment, Environments, GridEnvironment}
 import it.unibo.core.geometry.{Rectangle2D, Vector2D}
 import it.unibo.core.simulation.Simulation
 import it.unibo.core.dynamics.{DynamicFactory, Flocking}
@@ -17,21 +17,26 @@ import javax.swing.SwingUtilities
 
 object FlockingRendering extends App:
   given Random = Random(0)
-  var cancelSimulation: () => Future[Unit] = _
+  var cancelSimulation: () => Future[Unit] = () => Future.unit
   var lastCount = Parameter.BoidsCount.default.toInt
   val render = SwingRender()
-  render.boidsCountStrategy = boidsCount =>
-    if (boidsCount != lastCount) {
-      cancelSimulation()
-      lastCount = boidsCount
-      cancelSimulation = createSimulation
-    }
-  SwingUtilities.invokeLater(() => cancelSimulation = createSimulation)
+  var lastBounds = render.bounds
+  var latest: Option[Environment] = None
 
-  def createSimulation = Simulation(
-    render,
-    Environments.setupBoids(render.bounds, lastCount),
-    render,
-    DynamicFactory.flocking(render.bounds),
-    16 milliseconds
-  ).loop().unsafeRunCancelable()
+  /** A new population restarts the simulation, a resized window carries the flock over to it. */
+  render.boidsCountStrategy = boidsCount =>
+    if (boidsCount != lastCount)
+      lastCount = boidsCount
+      restart(Environments.setupBoids(render.bounds, boidsCount))
+    else if (render.bounds != lastBounds) latest.foreach(flock => restart(GridEnvironment(flock.all, render.bounds)))
+  SwingUtilities.invokeLater(() => restart(Environments.setupBoids(render.bounds, lastCount)))
+
+  def restart(environment: Environment): Unit =
+    cancelSimulation()
+    lastBounds = render.bounds
+    val recorded: Renderer = frame =>
+      latest = Some(frame)
+      render.render(frame)
+    cancelSimulation = Simulation(recorded, environment, render, DynamicFactory.flocking(lastBounds), 16 milliseconds)
+      .loop()
+      .unsafeRunCancelable()
