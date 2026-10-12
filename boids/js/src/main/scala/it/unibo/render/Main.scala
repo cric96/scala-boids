@@ -17,6 +17,7 @@ import scala.language.postfixOps
 import scala.scalajs.js.annotation.{JSExportTopLevel, JSGlobal, JSGlobalScope, JSName}
 import scala.util.Random
 import scalajs.js
+import scalajs.js.typedarray.Uint8ClampedArray
 import scala.math.atan
 
 import java.net.URL
@@ -54,8 +55,9 @@ object Main extends App with P5Logic with Renderer with ConfigurationStore:
       cancelSimulation = Simulation(this, environment, this, DynamicFactory.flocking(boundingBox), 33 millisecond)
         .loop()
         .unsafeRunCancelable()
-    background(255)
-    drawDensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment)
+    drawingContext.fillStyle = css(Palette.Background)
+    drawingContext.fillRect(0, 0, width, height)
+    drawDensityMap(DensityMap(boundingBox, sliders(BucketSize).value, sliders(BucketRange).value, environment))
     if (showBoids.checked()) drawBoids(environment.all)
 
   /** Straight on the canvas with the corners computed here: five p5 calls per boid would dominate the frame. */
@@ -108,19 +110,24 @@ private val chevron =
   """<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">""" +
     """<path d="M4 10l4-4 4 4"/></svg>"""
 
-def drawDensityMap(
-    boundingBox: Rectangle2D,
-    precision: Double,
-    visionRange: Double,
-    environment: Environment
-): Unit =
-  val densityMap = DensityMap(boundingBox, precision, visionRange, environment)
-  densityMap.cells.foreach { (column, row) =>
-    val centre = densityMap.centre(column, row)
-    drawingContext.fillStyle = colorFromDensity(densityMap.density(column, row))
-    drawingContext.fillRect(centre.x - precision / 2, centre.y - precision / 2, precision, precision)
+/** One pixel per cell stretched over the canvas, which smooths it. */
+def drawDensityMap(densityMap: DensityMap): Unit =
+  val heatmap = document.createElement("canvas")
+  heatmap.width = densityMap.columns
+  heatmap.height = densityMap.rows
+  val context = heatmap.getContext("2d")
+  val image = context.createImageData(densityMap.columns, densityMap.rows)
+  val pixels = image.data.asInstanceOf[Uint8ClampedArray]
+  Palette.heatmap(densityMap).zipWithIndex.foreach { (rgb, pixel) =>
+    val (red, green, blue) = Palette.channels(rgb)
+    Seq(red, green, blue, Palette.ChannelMax).zipWithIndex
+      .foreach((value, channel) => pixels(pixel * RgbaChannels + channel) = value.toShort)
   }
+  context.putImageData(image, 0, 0)
+  val (origin, cell) = (densityMap.origin, densityMap.cell)
+  drawingContext.drawImage(heatmap, origin.x, origin.y, densityMap.columns * cell, densityMap.rows * cell)
 
-/** Straight on the canvas, as p5 calls cost more than the drawing; negative hues are clamped to red like p5 did. */
-def colorFromDensity(density: Double): String =
-  s"hsl(${(((1.0f - density) * 0.85f - 0.15f) * 360).max(0)}, 100%, 50%)"
+/** Red, green, blue and alpha: the bytes of a pixel in a canvas image. */
+private val RgbaChannels = 4
+
+def css(rgb: Int): String = f"#$rgb%06x"

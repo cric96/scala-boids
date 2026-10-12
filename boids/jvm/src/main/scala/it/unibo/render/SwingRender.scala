@@ -47,23 +47,12 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
   def render(environment: Environment): Unit =
     val image = config.createCompatibleImage(frame.getWidth, frame.getHeight)
     val renderingContext = image.getGraphics
-    renderingContext.setColor(Color.white)
-    renderingContext.fillRect(0, 0, frame.getWidth, frame.getHeight)
+    val graphics = renderingContext.asInstanceOf[Graphics2D]
+    graphics.setColor(Color(Palette.Background))
+    graphics.fillRect(0, 0, frame.getWidth, frame.getHeight)
     boidsCountStrategy(renderingFrame.parametersOf(BoidsCount).toInt)
     val precision = renderingFrame.parametersOf(BucketSize)
-    val densityMap = DensityMap(bounds, precision.toInt, renderingFrame.parametersOf(BucketRange), environment)
-    densityMap.cells.foreach { (column, row) =>
-      val centre = densityMap.centre(column, row)
-      val result = (1.0f - densityMap.density(column, row)) * 0.85f - 0.15f
-      renderingContext.setColor(new Color(Color.HSBtoRGB(result.toFloat, 1, 0.5)))
-      renderingContext.fillRect(
-        (centre.x - precision / 2).toInt,
-        (centre.y - precision / 2).toInt,
-        precision.toInt,
-        precision.toInt
-      )
-    }
-    val graphics = renderingContext.asInstanceOf[Graphics2D]
+    drawDensityMap(graphics, DensityMap(bounds, precision, renderingFrame.parametersOf(BucketRange), environment))
     graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     if (renderingFrame.boidsEnabled)
       environment.all.foreach(boid =>
@@ -78,6 +67,23 @@ class SwingRender(control: Boolean = true, var boidsCountStrategy: Int => Unit =
     renderingFrame.backgroundImage = Some(image)
     frame.validate()
     frame.repaint()
+
+  /** One pixel per cell stretched over the frame, which smooths it. */
+  private def drawDensityMap(graphics: Graphics2D, densityMap: DensityMap): Unit =
+    val heatmap = BufferedImage(densityMap.columns, densityMap.rows, BufferedImage.TYPE_INT_RGB)
+    heatmap.setRGB(
+      0,
+      0,
+      densityMap.columns,
+      densityMap.rows,
+      Palette.heatmap(densityMap).toArray,
+      0,
+      densityMap.columns
+    )
+    val stretch = AffineTransform.getTranslateInstance(densityMap.origin.x, densityMap.origin.y)
+    stretch.scale(densityMap.cell, densityMap.cell)
+    graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+    graphics.drawImage(heatmap, stretch, null)
 
   override def getCurrentConfig(): ConfigurationStore.Config =
     ConfigurationStore.Config.from(renderingFrame.parametersOf)

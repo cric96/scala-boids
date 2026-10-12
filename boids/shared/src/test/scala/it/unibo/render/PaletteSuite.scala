@@ -1,6 +1,10 @@
 package it.unibo.render
 
-import it.unibo.Fixtures.samples
+import it.unibo.Fixtures.{population, samples, screen}
+import it.unibo.boundary.Parameter
+import it.unibo.core.{Environments, DensityMap}
+
+import scala.util.Random
 
 class PaletteSuite extends munit.CatsEffectSuite:
   private val densities = (0 to samples).map(_.toDouble / samples)
@@ -27,3 +31,11 @@ class PaletteSuite extends munit.CatsEffectSuite:
   test("densities out of range take the colour of the nearest end"):
     assertEquals(Palette.magma(Double.NegativeInfinity), Palette.magma(0))
     assertEquals(Palette.magma(Double.PositiveInfinity), Palette.magma(1))
+
+  test("the heatmap has a pixel per cell, row by row, in the colour of the density of the cell"):
+    val environment = Environments.setupBoids(screen, population)(using Random(0))
+    val densityMap = DensityMap(screen, Parameter.BucketSize.default, Parameter.BucketRange.default, environment)
+    val heatmap = Palette.heatmap(densityMap)
+    densityMap.cells.foreach((column, row) =>
+      assertEquals(heatmap(row * densityMap.columns + column), Palette.magma(densityMap.density(column, row)))
+    )

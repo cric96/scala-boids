@@ -16,7 +16,7 @@ html, body {
 body {
   margin: 0;
   display: flex;
-  background: #fff;
+  background: #000004;
 
   /* This centers our sketch horizontally. */
   justify-content: center;
